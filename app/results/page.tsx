@@ -188,15 +188,15 @@ export default function ResultsPage() {
       </div>
 
       {view === "overall" ? (
-        <div className="flex-1 overflow-y-auto bg-canvas">
+        <div className="flex-1 overflow-y-auto bg-[#0a0e14]">
           {overallLoading && !overall ? (
-            <div className="flex items-center justify-center h-full text-brand-ink/60 text-sm">
+            <div className="flex items-center justify-center h-full text-neutral-500 text-sm">
               Loading overall standings…
             </div>
           ) : overallError ? (
-            <div className="flex flex-col items-center justify-center h-full text-brand-ink/60 text-sm gap-2 px-6 text-center">
+            <div className="flex flex-col items-center justify-center h-full text-neutral-500 text-sm gap-2 px-6 text-center">
               <p>{overallError}</p>
-              <p className="text-xs text-brand-ink/50 max-w-md">
+              <p className="text-xs text-neutral-600 max-w-md">
                 Live overall standings are computed from real stage times as they come in — this
                 appears once the event has data flowing for the current rally weekend.
               </p>
@@ -204,15 +204,15 @@ export default function ResultsPage() {
           ) : overall ? (
             <div className="max-w-4xl mx-auto p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-[family-name:var(--font-display)] text-lg text-brand-ink tracking-tight">{overall.title}</h2>
-                <span className="text-xs text-brand-ink/50 font-mono">
+                <h2 className="font-[family-name:var(--font-display)] text-lg text-white tracking-tight">{overall.title}</h2>
+                <span className="text-xs text-neutral-500 font-mono">
                   {overall.stages.filter((s) => s.status === "Completed").length} / {overall.stages.length} stages done
                 </span>
               </div>
-              <div className="rounded-xl border border-brand-ink/10 overflow-hidden bg-white/40">
+              <div className="rounded-xl border border-white/10 overflow-hidden bg-[#11151c]">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-brand-ink/5 text-brand-ink/60 text-xs uppercase tracking-wide font-mono">
+                    <tr className="bg-white/[0.04] text-neutral-500 text-xs uppercase tracking-wide font-mono">
                       <th className="text-left px-3 py-2">Pos</th>
                       <th className="text-left px-3 py-2">Car</th>
                       <th className="text-left px-3 py-2">Driver / Co-Driver</th>
@@ -222,62 +222,68 @@ export default function ResultsPage() {
                       <th className="text-right px-3 py-2">Interval</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-brand-ink/10">
+                  <tbody className="divide-y divide-white/5">
                     {overall.standings.map((row) => (
                       <tr
                         key={row.number}
-                        className={`font-mono cursor-pointer hover:bg-brand-ink/[0.04] transition-colors ${row.isRetired ? "opacity-40" : ""} ${
-                          row.position === 1
-                            ? "bg-brand-gold/15"
-                            : row.position === 2
-                              ? "bg-brand-teal/15"
-                              : row.position === 3
-                                ? "bg-brand-orange/15"
-                                : ""
-                        } ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-brand-gold" : ""}`}
+                        className={`font-mono cursor-pointer hover:bg-white/[0.04] transition-colors ${row.isRetired ? "opacity-40" : ""} ${
+                          row.isPenalized
+                            ? "bg-red-950/40"
+                            : row.position === 1
+                              ? "bg-amber-400/10"
+                              : row.position === 2
+                                ? "bg-teal-400/10"
+                                : row.position === 3
+                                  ? "bg-orange-500/10"
+                                  : ""
+                        } ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-amber-400" : ""}`}
                         onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
                       >
                         <td className="px-3 py-2">
                           {row.position <= 3 ? (
                             <span
-                              className={`flex items-center justify-center w-6 h-6 rounded-full text-brand-ink font-bold text-xs ${
-                                row.position === 1 ? "bg-brand-gold" : row.position === 2 ? "bg-brand-teal text-white" : "bg-brand-orange"
+                              className={`flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs ${
+                                row.position === 1
+                                  ? "bg-amber-400 text-black"
+                                  : row.position === 2
+                                    ? "bg-teal-400 text-black"
+                                    : "bg-orange-500 text-white"
                               }`}
                             >
                               {row.position}
                             </span>
                           ) : (
-                            <span className="text-brand-ink/50">{row.position}</span>
+                            <span className="text-neutral-500">{row.position}</span>
                           )}
                         </td>
                         <td className="px-3 py-2">
-                          <span className="text-brand-gold font-bold">#{row.number}</span>
-                          {row.isRetired && <span className="ml-2 text-brand-maroon text-xs">DNF</span>}
-                          {row.isPenalized && <span className="ml-2 text-brand-orange text-xs">PEN</span>}
+                          <span className="text-teal-400 font-bold">#{row.number}</span>
+                          {row.isRetired && <span className="ml-2 text-neutral-500 text-xs">DNF</span>}
+                          {row.isPenalized && <span className="ml-2 text-red-400 text-xs font-bold">PEN</span>}
                         </td>
-                        <td className="px-3 py-2 text-brand-ink font-sans text-xs whitespace-nowrap">
+                        <td className="px-3 py-2 text-neutral-200 font-sans text-xs whitespace-nowrap">
                           {row.driverName} / {row.codriverName}
                         </td>
-                        <td className="px-3 py-2 text-brand-ink/60">{row.carClass}</td>
-                        <td className="px-3 py-2 text-right text-brand-ink">{msToClock(row.totalMs)}</td>
-                        <td className="px-3 py-2 text-right text-brand-ink/70">{gapLabel(row.gapToLeaderMs)}</td>
-                        <td className="px-3 py-2 text-right text-brand-ink/50">{gapLabel(row.gapToAheadMs)}</td>
+                        <td className="px-3 py-2 text-neutral-500">{row.carClass}</td>
+                        <td className="px-3 py-2 text-right text-neutral-100 font-bold">{msToClock(row.totalMs)}</td>
+                        <td className="px-3 py-2 text-right text-neutral-400">{gapLabel(row.gapToLeaderMs)}</td>
+                        <td className="px-3 py-2 text-right text-neutral-600">{gapLabel(row.gapToAheadMs)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-brand-ink/50 mt-3">
+              <p className="text-xs text-neutral-600 mt-3">
                 Refreshes automatically every 20s. Totals sum every completed stage time; DNF cars
                 shown grayed out at the bottom. Click a row to see that car&apos;s predicted
                 service times below.
               </p>
 
               {serviceCarNumber !== null && (
-                <div className="mt-4 rounded-2xl bg-brand-maroon p-4">
+                <div className="mt-4 rounded-2xl bg-[#11151c] border border-white/10 p-4">
                   <h3 className="text-xs font-mono uppercase tracking-widest text-white mb-3">
                     Predicted Service Times — Car #{serviceCarNumber}{" "}
-                    <span className="text-white/60 normal-case tracking-normal">
+                    <span className="text-neutral-500 normal-case tracking-normal">
                       (rally-local time, UTC{overall.timeZone})
                     </span>
                   </h3>
@@ -287,7 +293,7 @@ export default function ResultsPage() {
                       .sort((a, b) => a.serviceNumber - b.serviceNumber);
                     if (entries.length === 0) {
                       return (
-                        <p className="text-sm text-white/70">
+                        <p className="text-sm text-neutral-500">
                           No service predictions available for this car yet.
                         </p>
                       );
@@ -296,11 +302,11 @@ export default function ResultsPage() {
                       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
                         {entries.map((s) => {
                           return (
-                            <div key={s.serviceNumber} className="bg-black/25 rounded-xl p-3">
-                              <div className="text-xs text-white/60 font-mono uppercase mb-1">
+                            <div key={s.serviceNumber} className="bg-black/40 border border-white/5 rounded-xl p-3">
+                              <div className="text-xs text-neutral-500 font-mono uppercase mb-1">
                                 Service {s.serviceNumber}
                               </div>
-                              <div className="font-mono text-sm text-brand-gold font-bold">
+                              <div className="font-mono text-sm text-amber-400 font-bold">
                                 {formatLocalIsoAsIs(s.due)}
                               </div>
                             </div>
@@ -315,11 +321,11 @@ export default function ResultsPage() {
           ) : null}
         </div>
       ) : resolving ? (
-        <div className="flex-1 flex items-center justify-center text-brand-ink/60 text-sm bg-canvas">
+        <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm bg-[#0a0e14]">
           Loading stage/split times…
         </div>
       ) : iframeError ? (
-        <div className="flex-1 flex items-center justify-center text-brand-ink/60 text-sm bg-canvas">
+        <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm bg-[#0a0e14]">
           {iframeError}
         </div>
       ) : resultsEventId ? (
@@ -330,7 +336,7 @@ export default function ResultsPage() {
           title="RallySafe Results"
         />
       ) : (
-        <div className="flex-1 flex items-center justify-center text-brand-ink/60 text-sm bg-canvas">
+        <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm bg-[#0a0e14]">
           No live/upcoming events found right now.
         </div>
       )}
