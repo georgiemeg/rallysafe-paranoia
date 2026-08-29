@@ -189,7 +189,13 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-49px)] bg-canvas text-brand-ink">
+    <div
+      className="min-h-[calc(100vh-49px)] bg-[#0a0e14] text-neutral-100"
+      style={{
+        backgroundImage:
+          "repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 7px)",
+      }}
+    >
       {/* Bold color-blocked hero, inspired by the reference's cover treatment */}
       <div className="relative overflow-hidden bg-brand-gold text-brand-ink">
         <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-brand-orange/40 blur-2xl" />
@@ -426,10 +432,10 @@ export default function Home() {
               {saving ? "Saving…" : "Save & Start Tracking"}
             </button>
             {saveMessage && (
-              <p className="text-center text-sm mt-2 text-brand-ink">{saveMessage}</p>
+              <p className="text-center text-sm mt-2 text-neutral-100">{saveMessage}</p>
             )}
 
-            <p className="text-center text-xs text-brand-ink/60 mt-4">
+            <p className="text-center text-xs text-neutral-500 mt-4">
               Once saved, text HELP to the alert number for ad-hoc commands (overall time check,
               stage time check, class-only comparisons).
             </p>
