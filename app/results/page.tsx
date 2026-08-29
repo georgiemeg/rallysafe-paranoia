@@ -350,9 +350,9 @@ export default function ResultsPage() {
                 </table>
               </div>
               <p className="text-xs text-neutral-600 mt-3">
-                Refreshes automatically every 20s. Totals sum every completed stage time; DNF cars
-                shown grayed out at the bottom. Click a row to see that car&apos;s predicted
-                service times below.
+                {isAraEvent
+                  ? "Refreshes automatically every 20s. Totals sum every completed stage time; DNF cars shown grayed out at the bottom. Click a row to see that car's predicted service times below."
+                  : "Refreshes automatically every 20s. Totals sum every completed stage time; DNF cars shown grayed out at the bottom. Service estimates aren't available for this event (ARA events only)."}
               </p>
 
               {serviceCarNumber !== null && (
