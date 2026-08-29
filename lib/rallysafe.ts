@@ -74,7 +74,7 @@ export interface RSEntry {
   [key: string]: unknown;
 }
 
-async function rsFetch<T>(path: string): Promise<T> {
+export async function rsFetch<T>(path: string): Promise<T> {
   const cookie = await getIdentityCookie();
   const res = await fetch(`${BASE}${path}`, {
     headers: { Accept: "application/json", Cookie: cookie },
