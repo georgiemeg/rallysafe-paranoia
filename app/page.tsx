@@ -198,7 +198,6 @@ export default function Home() {
     >
       {/* Bold color-blocked hero, inspired by the reference's cover treatment */}
       <div className="relative overflow-hidden bg-brand-gold text-brand-ink">
-        <div className="absolute -left-10 bottom-0 w-40 h-40 rounded-full bg-brand-teal/40 blur-2xl" />
         <svg
           className="absolute inset-0 w-full h-full"
           viewBox="0 0 1280 320"
