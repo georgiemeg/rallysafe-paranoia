@@ -20,6 +20,7 @@ interface OverallStanding {
   gapToAheadMs: number;
   isRetired: boolean;
   isPenalized: boolean;
+  penaltySecondsNet: number;
 }
 
 interface ServiceEntry {
@@ -263,9 +264,37 @@ export default function ResultsPage() {
                           )}
                         </td>
                         <td className="px-3 py-2">
-                          <span className="text-teal-400 font-bold">#{row.number}</span>
+                          <span
+                            className={`font-bold ${
+                              row.position === 1
+                                ? "text-amber-400"
+                                : row.position === 2
+                                  ? "text-[#C0C0C0]"
+                                  : row.position === 3
+                                    ? "text-[#CD7F32]"
+                                    : "text-teal-400"
+                            }`}
+                          >
+                            #{row.number}
+                          </span>
                           {row.isRetired && <span className="ml-2 text-neutral-500 text-xs">DNF</span>}
-                          {row.isPenalized && <span className="ml-2 text-red-400 text-xs font-bold">PEN</span>}
+                          {row.isPenalized && (
+                            <span className="ml-2 text-red-400 text-xs font-bold">
+                              PEN
+                              {row.penaltySecondsNet !== 0 && (
+                                <span
+                                  className={`ml-1 ${
+                                    row.penaltySecondsNet > 0
+                                      ? "text-red-400 drop-shadow-[0_0_6px_rgba(248,113,113,0.85)]"
+                                      : "text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.85)]"
+                                  }`}
+                                >
+                                  {row.penaltySecondsNet > 0 ? "+" : "-"}
+                                  {Math.abs(row.penaltySecondsNet)}
+                                </span>
+                              )}
+                            </span>
+                          )}
                         </td>
                         <td className="px-3 py-2 text-neutral-200 font-sans text-xs whitespace-nowrap">
                           {row.driverName} / {row.codriverName}

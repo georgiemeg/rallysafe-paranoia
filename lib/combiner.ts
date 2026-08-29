@@ -16,6 +16,14 @@ export interface CombinerStage {
   predicted: number;
 }
 
+export interface CombinerPenalty {
+  control: string;
+  stage: number;
+  time: string; // duration string, e.g. "10.0" or "1:40.0" — always a positive duration
+  reason: string; // free text, e.g. "1 minute late" or "time reduced on appeal"
+  numbers?: number[];
+}
+
 export interface CombinerEntry {
   number: number;
   carClass: string;
@@ -24,7 +32,7 @@ export interface CombinerEntry {
   driverUID: number;
   codriverUID: number;
   sf: number; // speed factor
-  penalties: unknown[];
+  penalties: CombinerPenalty[];
   retirements: unknown[];
   times: string[]; // one per stage, "" if not yet run/DNS, "M:SS.d" or "SS.d" format
   splits: string[][];
@@ -141,6 +149,28 @@ export function msToClock(ms: number): string {
   return `${m}:${s.toFixed(1).padStart(4, "0")}`;
 }
 
+/** Parses a penalty duration string like "10.0" or "1:40.0" or "6:00.0" into whole seconds
+ * (always non-negative — the sign/direction is determined separately from the reason text). */
+function parsePenaltyDurationSeconds(t: string): number {
+  if (!t) return 0;
+  const parts = t.split(":");
+  if (parts.length === 2) {
+    const [m, s] = parts;
+    return Math.round(Number(m) * 60 + Number(s));
+  }
+  const s = Number(parts[0]);
+  return Number.isNaN(s) ? 0 : Math.round(s);
+}
+
+/** Time reduced on appeal/review is rare but real (e.g. a wrongly-issued penalty overturned).
+ * We detect it from the reason text since the feed always reports a positive duration string;
+ * anything mentioning a reduction/appeal/credit is treated as time given BACK (net negative),
+ * everything else (late/early/etc) is time ADDED (net positive). */
+function isTimeReducedReason(reason: string): boolean {
+  const r = (reason ?? "").toLowerCase();
+  return /reduc|appeal|credit|given back|overturn|rescind/.test(r);
+}
+
 export interface OverallStanding {
   position: number;
   number: number;
@@ -154,6 +184,9 @@ export interface OverallStanding {
   gapToAheadMs: number;
   isRetired: boolean;
   isPenalized: boolean;
+  /** Net penalty seconds: positive = time added (bad), negative = time reduced on appeal (good).
+   * Zero when isPenalized is false. */
+  penaltySecondsNet: number;
 }
 
 /** Computes running overall totals from every completed-stage time for every entry,
@@ -180,6 +213,12 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
     }
     if (stagesCompleted === 0) continue; // hasn't started, skip entirely
 
+    const penalties = entry.penalties ?? [];
+    const penaltySecondsNet = penalties.reduce((sum, p) => {
+      const secs = parsePenaltyDurationSeconds(p.time);
+      return sum + (isTimeReducedReason(p.reason) ? -secs : secs);
+    }, 0);
+
     rows.push({
       position: 0,
       number: entry.number,
@@ -192,7 +231,8 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
       gapToLeaderMs: 0,
       gapToAheadMs: 0,
       isRetired: (entry.retirements ?? []).length > 0,
-      isPenalized: (entry.penalties ?? []).length > 0,
+      isPenalized: penalties.length > 0,
+      penaltySecondsNet,
     });
   }
 
