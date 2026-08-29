@@ -304,7 +304,7 @@ export default function Home() {
                             {entry.identifier}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate">
+                            <div className="font-medium text-sm text-neutral-500 truncate">
                               {entry.carClass ? (
                                 <span className="text-brand-teal font-mono text-xs uppercase mr-1.5">
                                   {entry.carClass}
@@ -368,7 +368,7 @@ export default function Home() {
                               {car.identifier}
                             </span>
                             <div className="min-w-0">
-                              <div className="font-medium text-sm truncate">
+                              <div className="font-medium text-sm text-neutral-500 truncate">
                                 {car.carClass ? (
                                   <span className="text-brand-teal font-mono text-xs uppercase mr-1.5">
                                     {car.carClass}
