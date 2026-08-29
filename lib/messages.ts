@@ -132,6 +132,37 @@ export function incidentMessage(sub: CarSubscription, minutesStopped: number, ma
   );
 }
 
+export interface ServiceEstimateEntry {
+  serviceNumber: number;
+  due: string; // ISO-ish local timestamp, e.g. "2026-08-29T13:35:00.000Z" (already local time — see combiner.ts note)
+}
+
+/** Service Estimates alert — ARA events only, sourced from the same predicted service-in
+ * times shown on the Results page. Formats every upcoming service point for this car. */
+export function serviceEstimatesMessage(sub: CarSubscription, estimates: ServiceEstimateEntry[]): string {
+  const carLabel = fmtCarLabel(sub);
+  const lines: string[] = [];
+  lines.push(`Service Estimates — Car ${carLabel} (${sub.driverName}/${sub.codriverName}):`);
+  lines.push("");
+  if (estimates.length === 0) {
+    lines.push("No predicted service times available yet.");
+  } else {
+    for (const s of estimates.sort((a, b) => a.serviceNumber - b.serviceNumber)) {
+      const m = s.due.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+      let label = s.due;
+      if (m) {
+        const [, , , , hour, minute] = m;
+        const h = Number(hour);
+        const ampm = h >= 12 ? "PM" : "AM";
+        const h12 = h % 12 === 0 ? 12 : h % 12;
+        label = `${h12}:${minute} ${ampm}`;
+      }
+      lines.push(`Service ${s.serviceNumber}: ~${label}`);
+    }
+  }
+  return lines.join("\n");
+}
+
 /** Joins multiple alert-type messages that fired in the same tick into one batched SMS. */
 export function batchMessages(messages: string[]): string {
   return messages.filter(Boolean).join("\n====================\n");

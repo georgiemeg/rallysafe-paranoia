@@ -140,3 +140,24 @@ body {
   border-right: 3px solid #d5a021;
 }
 
+/* ARA-only feature toast — appears then auto-dismisses. */
+@keyframes ara-toast-in-out {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  10%,
+  85% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+}
+
+.ara-toast {
+  animation: ara-toast-in-out 3s ease forwards;
+}
+

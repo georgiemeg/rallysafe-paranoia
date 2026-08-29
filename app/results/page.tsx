@@ -72,6 +72,7 @@ function formatLocalIsoAsIs(iso: string): string {
 export default function ResultsPage() {
   const [events, setEvents] = useState<RSEvent[]>([]);
   const [selected, setSelected] = useState<RSEvent | null>(null);
+  const [araEventIds, setAraEventIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"overall" | "stagetimes">("overall");
 
@@ -86,6 +87,7 @@ export default function ResultsPage() {
   const [iframeError, setIframeError] = useState("");
 
   const [serviceCarNumber, setServiceCarNumber] = useState<number | null>(null);
+  const [showAraOnlyToast, setShowAraOnlyToast] = useState(false);
 
   useEffect(() => {
     fetch("/api/events/active")
@@ -93,12 +95,24 @@ export default function ResultsPage() {
       .then((d) => {
         const list: RSEvent[] = d.events ?? [];
         setEvents(list);
+        setAraEventIds(new Set<number>(d.araEventIds ?? []));
         const activeId = d.activeEventId ?? list[0]?.eventId ?? null;
         setSelected(list.find((ev) => ev.eventId === activeId) ?? list[0] ?? null);
       })
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const isAraEvent = selected ? araEventIds.has(selected.eventId) : false;
+
+  const handleRowClick = (carNumber: number) => {
+    if (!isAraEvent) {
+      setShowAraOnlyToast(true);
+      window.setTimeout(() => setShowAraOnlyToast(false), 3000);
+      return;
+    }
+    setServiceCarNumber(carNumber === serviceCarNumber ? null : carNumber);
+  };
 
   // Poll overall standings every 20s while that view is active
   useEffect(() => {
@@ -244,7 +258,7 @@ export default function ResultsPage() {
                                   ? "bg-[#CD7F32]/10"
                                   : ""
                         } ${serviceCarNumber === row.number ? "selected-row-tape" : ""}`}
-                        onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
+                        onClick={() => handleRowClick(row.number)}
                       >
                         <td className="px-3 py-2">
                           {row.position <= 3 ? (
@@ -386,6 +400,12 @@ export default function ResultsPage() {
       ) : (
         <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm bg-[#0a0e14]">
           No live/upcoming events found right now.
+        </div>
+      )}
+
+      {showAraOnlyToast && (
+        <div className="ara-toast fixed bottom-6 left-1/2 z-50 bg-brand-ink border border-brand-gold/40 text-white text-sm rounded-xl px-4 py-3 shadow-lg shadow-black/50 max-w-xs text-center">
+          🔒 Service estimates are only available for ARA events.
         </div>
       )}
     </div>

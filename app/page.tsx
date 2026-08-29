@@ -17,12 +17,13 @@ interface RSEntrySlim {
   carModelYear: string;
 }
 
-const ALERT_LABELS: { key: string; label: string; icon: string }[] = [
+const ALERT_LABELS: { key: string; label: string; icon: string; araOnly?: boolean }[] = [
   { key: "stageStart", label: "Stage Start", icon: "\uD83D\uDEA6" },
   { key: "stageFinish", label: "Stage Finish", icon: "\uD83C\uDFC1" },
   { key: "stageTimes", label: "Stage Times", icon: "\u23F1\uFE0F" },
   { key: "overallTime", label: "Overall Time", icon: "\uD83C\uDFC6" },
   { key: "incidentDetection", label: "Incident Detection", icon: "\uD83D\uDEA8" },
+  { key: "serviceEstimates", label: "Service Estimates", icon: "\uD83D\uDD27", araOnly: true },
 ];
 
 type AlertsMap = Record<string, boolean>;
@@ -42,6 +43,7 @@ export default function Home() {
   const [phone, setPhone] = useState("");
   const [events, setEvents] = useState<RSEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<RSEvent | null>(null);
+  const [araEventIds, setAraEventIds] = useState<Set<number>>(new Set());
   const [entries, setEntries] = useState<RSEntrySlim[]>([]);
   const [tracked, setTracked] = useState<Map<number, TrackedCar>>(new Map());
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -62,6 +64,7 @@ export default function Home() {
       .then((d) => {
         const list = d.events ?? [];
         setEvents(list);
+        setAraEventIds(new Set<number>(d.araEventIds ?? []));
         const activeId = d.activeEventId ?? list[0]?.eventId ?? null;
         const match = list.find((ev: RSEvent) => ev.eventId === activeId);
         if (match) setSelectedEvent(match);
@@ -302,7 +305,7 @@ export default function Home() {
             </section>
 
             {/* Entries + Tracked — maroon block */}
-            <section className="mb-6 rounded-2xl bg-[#19381F] p-5 sm:p-6">
+            <section className="mb-6 rounded-2xl bg-[#2F6B3D] p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-ink text-brand-gold font-mono text-sm font-bold shrink-0">
                   03
@@ -422,21 +425,37 @@ export default function Home() {
                           </button>
                         </div>
                         <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5 pl-[42px]">
-                          {ALERT_LABELS.map((a) => (
-                            <label
-                              key={a.key}
-                              className="flex items-center gap-2 text-xs cursor-pointer text-neutral-400 hover:text-neutral-200"
-                            >
-                              <input
-                                type="checkbox"
-                                className={`w-3.5 h-3.5 ${a.key === "incidentDetection" ? "accent-brand-orange" : "accent-brand-teal"}`}
-                                checked={car.alerts[a.key] ?? false}
-                                onChange={() => toggleAlert(car.entryId, a.key)}
-                              />
-                              <span>{a.icon}</span>
-                              {a.label}
-                            </label>
-                          ))}
+                          {ALERT_LABELS.map((a) => {
+                            const isAraEvent = selectedEvent ? araEventIds.has(selectedEvent.eventId) : false;
+                            const disabled = a.araOnly && !isAraEvent;
+                            return (
+                              <label
+                                key={a.key}
+                                title={disabled ? "Service estimates are only available for ARA events" : undefined}
+                                className={`flex items-center gap-2 text-xs ${
+                                  disabled
+                                    ? "cursor-not-allowed text-neutral-700"
+                                    : "cursor-pointer text-neutral-400 hover:text-neutral-200"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  disabled={disabled}
+                                  className={`w-3.5 h-3.5 ${
+                                    disabled
+                                      ? "accent-neutral-700"
+                                      : a.key === "incidentDetection"
+                                        ? "accent-brand-orange"
+                                        : "accent-brand-teal"
+                                  }`}
+                                  checked={car.alerts[a.key] ?? false}
+                                  onChange={() => toggleAlert(car.entryId, a.key)}
+                                />
+                                <span>{a.icon}</span>
+                                {a.label}
+                              </label>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
