@@ -43,7 +43,7 @@ export default function HelpPage() {
         <p className="text-sm text-neutral-400">
           Everything the app does, in one place. Every checkbox and section also has a small{" "}
           <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-current text-[10px] mx-0.5">i</span>{" "}
-          icon next to it — hover (or tap on mobile) for a quick explanation right where you need it.
+          icon next to it. Hover it, or tap it on mobile, for a quick explanation right where you need it.
         </p>
 
         <Section title="Setup Page">
@@ -52,63 +52,63 @@ export default function HelpPage() {
             &quot;Add →&quot; to move it into your Tracked panel.
           </Feature>
           <Feature icon="🚦" name="Stage Start / Stage Finish">
-            Get a text the instant a tracked car starts or finishes a stage — no more wondering if
+            Get a text the instant a tracked car starts or finishes a stage, so you always know
             they&apos;re actually on their way.
           </Feature>
           <Feature icon="⏱️" name="Stage Times">
-            After each stage, get that car&apos;s time and position, compared against its own prior
-            pass on the same stage and the cars immediately ahead. Text back anytime for a fresh
-            re-check.
+            After each stage, you get that car&apos;s time and position, compared against its own
+            prior pass on the same stage and the cars right ahead of it. Text back anytime for a
+            fresh re-check.
           </Feature>
           <Feature icon="🏆" name="Overall Time">
-            Get the car&apos;s overall rally position plus the 3 cars ahead and 3 behind. Text{" "}
+            You get the car&apos;s overall rally position plus the 3 cars ahead and 3 behind. Text{" "}
             <span className="text-brand-teal font-mono">CAR # CLASS ONLY</span> to switch that
             comparison to just cars in the same class, or{" "}
             <span className="text-brand-teal font-mono">CAR # ALL CLASSES</span> to switch back.
           </Feature>
           <Feature icon="🚨" name="Incident Detection">
-            Uses the car&apos;s real accelerometer data, not just its GPS position on the map. A
-            car with a weak signal that&apos;s still genuinely moving won&apos;t trigger a false
-            alarm — only a true stop of 3+ minutes on stage does.
+            This one watches the car&apos;s real accelerometer data instead of just its GPS
+            position on the map. A car with a weak signal that&apos;s still genuinely moving
+            won&apos;t trigger a false alarm. Only a true stop of 3 or more minutes on stage does.
           </Feature>
           <Feature icon="🔧" name="Service Estimates">
-            Predicted arrival times at each upcoming service point for this car. Only available on
-            ARA-sanctioned events — other rallies don&apos;t publish this data publicly.
+            Predicted arrival times at each upcoming service point for this car. Only works on
+            ARA-sanctioned events, since other rallies don&apos;t publish this data publicly.
           </Feature>
           <Feature icon="💾" name="Save & Start Tracking">
-            Persists every car and alert-type choice for this device in one go. Nothing sends until
+            Saves every car and alert-type choice for this device in one go. Nothing sends until
             you save.
           </Feature>
         </Section>
 
         <Section title="RallySafe Live">
           <Feature icon="📡" name="Live Map">
-            The official RallySafe live-tracking map, embedded directly — real-time car positions
-            for the selected event, exactly as RallySafe itself shows it.
+            The official RallySafe live-tracking map, embedded directly. It shows the same
+            real-time car positions for the selected event that RallySafe itself shows.
           </Feature>
         </Section>
 
         <Section title="Results">
           <Feature icon="🏁" name="Overall (Live)">
-            A running overall classification computed from real stage times — position, total
+            A running overall classification computed from real stage times: position, total
             time, gap to leader, and interval to the car ahead, refreshed automatically. Colored
-            circular badges mark the top 3 (gold/silver/bronze); DNF cars show grayed out at the
-            bottom.
+            circular badges mark the top 3 in gold, silver, and bronze. DNF cars show grayed out
+            at the bottom.
           </Feature>
           <Feature icon="⚠️" name="Penalty availability">
             On ARA events, penalties show as a red PEN badge with the exact seconds added or
-            reduced on appeal. On non-ARA events, that data isn&apos;t published on the public feed
-            this table is built from — times and positions are still accurate, but penalty
-            adjustments may not be reflected. A banner reminds you of this whenever it applies.
+            reduced on appeal. On non-ARA events, that data just isn&apos;t published on the
+            public feed this table pulls from. Times and positions still stay accurate, but
+            penalty adjustments might be missing. A banner reminds you whenever that applies.
           </Feature>
           <Feature icon="🛠️" name="Service Times (tap a row)">
-            On ARA events, tap any row to see that car&apos;s predicted service arrival times below
-            the table. On non-ARA events this data doesn&apos;t exist, so tapping shows a quick
-            explanation instead.
+            On ARA events, tap any row to see that car&apos;s predicted service arrival times
+            below the table. On non-ARA events this data doesn&apos;t exist yet, so tapping shows
+            a quick explanation instead.
           </Feature>
           <Feature icon="⏱️" name="Stage / Split Times">
-            The official RallySafe results site, embedded — full per-stage and split times exactly
-            as published.
+            The official RallySafe results site, embedded directly. It shows full per-stage and
+            split times exactly as published.
           </Feature>
         </Section>
 
@@ -123,13 +123,13 @@ export default function HelpPage() {
             Re-sends the latest stage time for every car you&apos;re tracking.
           </Feature>
           <Feature icon="💬" name="CAR # CLASS ONLY / CAR # ALL CLASSES">
-            Switches that car&apos;s comparisons between &quot;within its class only&quot; and
-            &quot;against every car&quot;.
+            Switches that car&apos;s comparisons between only cars in its class and every car in
+            the event.
           </Feature>
         </Section>
 
         <p className="text-center text-[11px] text-neutral-600 font-mono pb-6">
-          Live positions update continuously · alerts and standings refresh every ~20s
+          Live positions update continuously. Alerts and standings refresh about every 20 seconds.
         </p>
       </div>
     </div>

@@ -24,7 +24,7 @@ const displayFont = Archivo_Black({
 
 export const metadata: Metadata = {
   title: "RallySafe Paranoia",
-  description: "Track your friends live on stage — texts for stage starts, finishes, times, and stalls.",
+  description: "Track your friends live on stage. Texts for stage starts, finishes, times, and stalls.",
 };
 
 export default function RootLayout({

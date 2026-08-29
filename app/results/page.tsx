@@ -224,7 +224,7 @@ export default function ResultsPage() {
             <div className="flex flex-col items-center justify-center h-full text-neutral-500 text-sm gap-2 px-6 text-center">
               <p>{overallError}</p>
               <p className="text-xs text-neutral-600 max-w-md">
-                Live overall standings are computed from real stage times as they come in — this
+                Live overall standings are computed from real stage times as they come in. This
                 appears once the event has data flowing for the current rally weekend.
               </p>
             </div>
@@ -238,10 +238,10 @@ export default function ResultsPage() {
               </div>
               {!isAraEvent && (
                 <div className="mb-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-300/90">
-                  ⚠️ Penalty data is not available for this event (non-ARA events only — official
-                  penalties are published separately by each rally and aren&apos;t exposed on the
-                  public live-tracking feed this table is built from). Times/positions shown are
-                  accurate but may not reflect penalties applied after the fact.
+                  ⚠️ Penalty data isn&apos;t available for this event. This is a non-ARA event, and
+                  official penalties get published separately by each rally rather than through
+                  the public live-tracking feed this table pulls from. Times and positions shown
+                  are accurate, but they may not reflect penalties applied after the fact.
                 </div>
               )}
               <div className="rounded-xl border border-white/10 bg-[#11151c] overflow-x-auto">
@@ -358,7 +358,7 @@ export default function ResultsPage() {
               {serviceCarNumber !== null && (
                 <div className="mt-4 rounded-2xl bg-[#11151c] border border-white/10 p-4">
                   <h3 className="text-xs font-mono uppercase tracking-widest text-white mb-3">
-                    Predicted Service Times — Car #{serviceCarNumber}{" "}
+                    Predicted Service Times for Car #{serviceCarNumber}{" "}
                     <span className="text-neutral-500 normal-case tracking-normal">
                       (rally-local time, UTC{overall.timeZone})
                     </span>

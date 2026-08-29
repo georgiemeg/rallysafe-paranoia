@@ -29,32 +29,32 @@ const ALERT_LABELS: { key: string; label: string; icon: string; araOnly?: boolea
     key: "stageFinish",
     label: "Stage Finish",
     icon: "\uD83C\uDFC1",
-    info: "Texts you the moment this car finishes a stage — the anxious wait is over.",
+    info: "Texts you the moment this car finishes a stage, so you can stop stressing.",
   },
   {
     key: "stageTimes",
     label: "Stage Times",
     icon: "\u23F1\uFE0F",
-    info: "After the stage, sends that stage's time + position, compared to the same stage's prior pass and the cars ahead. You can also text back anytime to get an updated re-check.",
+    info: "After the stage, sends that stage's time and position, compared to the same stage's prior pass and the cars ahead. Text back anytime for an updated re-check.",
   },
   {
     key: "overallTime",
     label: "Overall Time",
     icon: "\uD83C\uDFC6",
-    info: "Sends overall rally position + the 3 cars ahead and behind. Text \"CAR # CLASS ONLY\" to switch to comparing only within that car's class instead of every car.",
+    info: "Sends overall rally position plus the 3 cars ahead and behind. Text CAR # CLASS ONLY to compare only within that car's class instead of every car.",
   },
   {
     key: "incidentDetection",
     label: "Incident Detection",
     icon: "\uD83D\uDEA8",
-    info: "Uses the car's raw accelerometer data (not just GPS position) — if it stops truly moving for 3+ minutes on stage, you get an alert. Normal signal gaps/chunky updates don't trigger it.",
+    info: "Watches the car's raw accelerometer data. If it stops truly moving for 3+ minutes on stage you get an alert. A weak signal or chunky GPS updates won't trigger a false alarm.",
   },
   {
     key: "serviceEstimates",
     label: "Service Estimates",
     icon: "\uD83D\uDD27",
     araOnly: true,
-    info: "Sends predicted arrival times at each upcoming service point. Only available for ARA-sanctioned events — other rallies don't publish this data.",
+    info: "Sends predicted arrival times at each upcoming service point. Only works for ARA-sanctioned events since other rallies don't publish this data.",
   },
 ];
 
@@ -302,7 +302,7 @@ export default function Home() {
                 setSelectedEvent(ev ?? null);
               }}
             >
-              <option value="">— Select an event —</option>
+              <option value="">Select an event...</option>
               {events.map((ev) => (
                 <option key={ev.eventId} value={ev.eventId}>
                   {ev.name}
@@ -333,7 +333,7 @@ export default function Home() {
                 onChange={(e) => setPhone(e.target.value)}
               />
               <p className="text-xs text-white/80 mt-1.5">
-                Saved to this device — no need to re-enter it next time.
+                Saved to this device, so you won't need to re-enter it next time.
               </p>
             </section>
 
@@ -400,8 +400,8 @@ export default function Home() {
                             <>
                               <p className="mb-1">No entries available from RallySafe right now.</p>
                               <p className="text-xs text-neutral-600">
-                                This usually means the event is between legs/days (e.g.
-                                overnight) — entries typically reappear once the next stage day
+                                This usually means the event is between legs or days, like
+                                overnight. Entries typically reappear once the next stage day
                                 starts.
                               </p>
                               <button
@@ -520,7 +520,7 @@ export default function Home() {
               stage time check, class-only comparisons).
             </p>
             <p className="text-center text-[11px] text-neutral-600 mt-1.5 font-mono">
-              Live positions update continuously · alerts and standings refresh every ~20s
+              Live positions update continuously. Alerts and standings refresh about every 20 seconds.
             </p>
           </>
         )}
