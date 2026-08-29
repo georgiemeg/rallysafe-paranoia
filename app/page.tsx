@@ -6,18 +6,35 @@ import { getDeviceId, getSavedPhone, savePhoneLocally } from "@/lib/device";
 interface RSEvent {
   eventId: number;
   name: string;
-  countryCode?: string;
-  startDate?: string;
-  endDate?: string;
 }
 
 interface RSEntrySlim {
   entryId: number;
   identifier: string;
-  classText?: string;
+  carClass: string;
   driver: string;
   navigator: string | null;
-  make?: string;
+  carModelYear: string;
+}
+
+const ALERT_LABELS: { key: string; label: string }[] = [
+  { key: "stageStart", label: "Stage Start" },
+  { key: "stageFinish", label: "Stage Finish" },
+  { key: "stageTimes", label: "Stage Times" },
+  { key: "overallTime", label: "Overall Time" },
+  { key: "incidentDetection", label: "Incident Detection" },
+];
+
+type AlertsMap = Record<string, boolean>;
+
+interface TrackedCar extends RSEntrySlim {
+  alerts: AlertsMap;
+}
+
+function defaultAlerts(): AlertsMap {
+  const out: AlertsMap = {};
+  for (const a of ALERT_LABELS) out[a.key] = false;
+  return out;
 }
 
 export default function Home() {
@@ -26,7 +43,7 @@ export default function Home() {
   const [events, setEvents] = useState<RSEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<RSEvent | null>(null);
   const [entries, setEntries] = useState<RSEntrySlim[]>([]);
-  const [selectedEntryIds, setSelectedEntryIds] = useState<Set<number>>(new Set());
+  const [tracked, setTracked] = useState<Map<number, TrackedCar>>(new Map());
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [loadingEntries, setLoadingEntries] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,8 +51,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const id = getDeviceId();
-    setDeviceId(id);
+    setDeviceId(getDeviceId());
     setPhone(getSavedPhone());
   }, []);
 
@@ -47,35 +63,55 @@ export default function Home() {
       .finally(() => setLoadingEvents(false));
   }, []);
 
-  // When an event is selected, load entries and any existing saved subscriptions
   useEffect(() => {
     if (!selectedEvent || !deviceId) return;
     setLoadingEntries(true);
-    setSelectedEntryIds(new Set());
+    setTracked(new Map());
 
     Promise.all([
       fetch(`/api/events/${selectedEvent.eventId}/entries`).then((r) => r.json()),
-      fetch(`/api/subscriptions?deviceId=${deviceId}`).then((r) => r.json()),
+      fetch(`/api/subscriptions?deviceId=${deviceId}&eventId=${selectedEvent.eventId}`).then((r) => r.json()),
     ])
       .then(([entriesData, subsData]) => {
-        setEntries(entriesData.entries ?? []);
-        const existing: { eventId: number; entryId: number }[] = subsData.subscriptions ?? [];
-        const forThisEvent = existing
-          .filter((s) => s.eventId === selectedEvent.eventId)
-          .map((s) => s.entryId);
-        setSelectedEntryIds(new Set(forThisEvent));
-        if (subsData.device?.phone) {
-          setPhone(subsData.device.phone);
+        const entryList: RSEntrySlim[] = entriesData.entries ?? [];
+        setEntries(entryList);
+
+        const existingMap = new Map<number, TrackedCar>();
+        for (const sub of subsData.subscriptions ?? []) {
+          const matching = entryList.find((e) => e.entryId === sub.entryId);
+          if (matching) {
+            existingMap.set(sub.entryId, { ...matching, alerts: { ...defaultAlerts(), ...sub.alerts } });
+          }
         }
+        setTracked(existingMap);
+
+        if (subsData.device?.phone) setPhone(subsData.device.phone);
       })
       .finally(() => setLoadingEntries(false));
   }, [selectedEvent, deviceId]);
 
-  const toggleEntry = useCallback((entryId: number) => {
-    setSelectedEntryIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(entryId)) next.delete(entryId);
-      else next.add(entryId);
+  const addCar = useCallback((entry: RSEntrySlim) => {
+    setTracked((prev) => {
+      const next = new Map(prev);
+      next.set(entry.entryId, { ...entry, alerts: defaultAlerts() });
+      return next;
+    });
+  }, []);
+
+  const removeCar = useCallback((entryId: number) => {
+    setTracked((prev) => {
+      const next = new Map(prev);
+      next.delete(entryId);
+      return next;
+    });
+  }, []);
+
+  const toggleAlert = useCallback((entryId: number, alertKey: string) => {
+    setTracked((prev) => {
+      const next = new Map(prev);
+      const car = next.get(entryId);
+      if (!car) return prev;
+      next.set(entryId, { ...car, alerts: { ...car.alerts, [alertKey]: !car.alerts[alertKey] } });
       return next;
     });
   }, []);
@@ -96,7 +132,15 @@ export default function Home() {
           deviceId,
           phone,
           eventId: selectedEvent.eventId,
-          entryIds: Array.from(selectedEntryIds),
+          cars: Array.from(tracked.values()).map((c) => ({
+            entryId: c.entryId,
+            carNumber: c.identifier,
+            driverName: c.driver,
+            codriverName: c.navigator ?? "",
+            carClass: c.carClass,
+            carModelYear: c.carModelYear,
+            alerts: c.alerts,
+          })),
         }),
       });
       const data = await res.json();
@@ -105,7 +149,7 @@ export default function Home() {
       } else {
         savePhoneLocally(data.phone);
         setPhone(data.phone);
-        setSaveMessage(`Saved! Watching ${selectedEntryIds.size} car(s).`);
+        setSaveMessage(`Saved! Tracking ${tracked.size} car(s).`);
       }
     } catch {
       setSaveMessage("Network error saving subscriptions.");
@@ -114,7 +158,8 @@ export default function Home() {
     }
   };
 
-  const filteredEntries = entries.filter((e) => {
+  const availableEntries = entries.filter((e) => !tracked.has(e.entryId));
+  const filteredAvailable = availableEntries.filter((e) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
@@ -125,15 +170,15 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 p-6 max-w-3xl mx-auto">
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 p-6 max-w-6xl mx-auto">
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">🏁 RallySafe Paranoia</h1>
         <p className="text-neutral-400 mt-1">
-          Get a text if someone you&apos;re watching stops moving on stage for 3+ minutes.
+          Track your friends live on stage — texts for stage starts, finishes, times, and stalls.
         </p>
       </header>
 
-      <section className="mb-8">
+      <section className="mb-6">
         <h2 className="text-lg font-semibold mb-2">1. Pick an event</h2>
         {loadingEvents ? (
           <p className="text-neutral-500">Loading events…</p>
@@ -165,7 +210,7 @@ export default function Home() {
             <input
               type="tel"
               placeholder="+1 314 555 1234"
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100"
+              className="w-full max-w-sm bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
             />
@@ -174,51 +219,95 @@ export default function Home() {
             </p>
           </section>
 
-          <section className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-semibold">3. Select who to track</h2>
-              <span className="text-sm text-neutral-400">
-                {selectedEntryIds.size} selected
-              </span>
-            </div>
-            <input
-              type="text"
-              placeholder="Search car #, driver, co-driver…"
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2 mb-3 text-neutral-100"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {loadingEntries ? (
-              <p className="text-neutral-500">Loading entries…</p>
-            ) : (
-              <div className="border border-neutral-800 rounded-lg divide-y divide-neutral-800 max-h-[50vh] overflow-y-auto">
-                {filteredEntries.map((entry) => (
-                  <label
-                    key={entry.entryId}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-900 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      className="w-5 h-5 accent-emerald-500"
-                      checked={selectedEntryIds.has(entry.entryId)}
-                      onChange={() => toggleEntry(entry.entryId)}
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        #{entry.identifier} — {entry.driver}
-                        {entry.navigator ? ` / ${entry.navigator}` : ""}
+          <section className="mb-6 grid md:grid-cols-2 gap-4">
+            {/* Left: available entries */}
+            <div>
+              <h2 className="text-lg font-semibold mb-2">3. All entries</h2>
+              <input
+                type="text"
+                placeholder="Search car #, driver, co-driver…"
+                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2 mb-3 text-neutral-100"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {loadingEntries ? (
+                <p className="text-neutral-500">Loading entries…</p>
+              ) : (
+                <div className="border border-neutral-800 rounded-lg divide-y divide-neutral-800 max-h-[60vh] overflow-y-auto">
+                  {filteredAvailable.map((entry) => (
+                    <div
+                      key={entry.entryId}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-900"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">
+                          #{entry.identifier}
+                          {entry.carClass ? ` (${entry.carClass})` : ""} — {entry.driver}
+                          {entry.navigator ? ` / ${entry.navigator}` : ""}
+                        </div>
+                        <div className="text-xs text-neutral-500">{entry.carModelYear}</div>
                       </div>
-                      <div className="text-xs text-neutral-500">
-                        {entry.classText} {entry.make ? `· ${entry.make}` : ""}
-                      </div>
+                      <button
+                        onClick={() => addCar(entry)}
+                        className="shrink-0 bg-neutral-800 hover:bg-emerald-700 text-sm px-3 py-1.5 rounded-md"
+                      >
+                        Add →
+                      </button>
                     </div>
-                  </label>
+                  ))}
+                  {filteredAvailable.length === 0 && (
+                    <p className="px-4 py-6 text-center text-neutral-500">
+                      {entries.length === 0 ? "No entries." : "All matching entries are already tracked."}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Right: tracked cars with per-alert checkboxes */}
+            <div>
+              <h2 className="text-lg font-semibold mb-2">Tracked ({tracked.size})</h2>
+              <div className="border border-neutral-800 rounded-lg divide-y divide-neutral-800 max-h-[60vh] overflow-y-auto">
+                {Array.from(tracked.values()).map((car) => (
+                  <div key={car.entryId} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="font-medium">
+                          #{car.identifier}
+                          {car.carClass ? ` (${car.carClass})` : ""} — {car.driver}
+                          {car.navigator ? ` / ${car.navigator}` : ""}
+                        </div>
+                        <div className="text-xs text-neutral-500">{car.carModelYear}</div>
+                      </div>
+                      <button
+                        onClick={() => removeCar(car.entryId)}
+                        className="shrink-0 text-red-400 hover:text-red-300 text-sm px-2"
+                      >
+                        ✕ Remove
+                      </button>
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+                      {ALERT_LABELS.map((a) => (
+                        <label key={a.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-emerald-500"
+                            checked={car.alerts[a.key] ?? false}
+                            onChange={() => toggleAlert(car.entryId, a.key)}
+                          />
+                          {a.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ))}
-                {filteredEntries.length === 0 && (
-                  <p className="px-4 py-6 text-center text-neutral-500">No entries match.</p>
+                {tracked.size === 0 && (
+                  <p className="px-4 py-6 text-center text-neutral-500">
+                    Click &quot;Add →&quot; on the left to start tracking cars.
+                  </p>
                 )}
               </div>
-            )}
+            </div>
           </section>
 
           <button
@@ -231,6 +320,11 @@ export default function Home() {
           {saveMessage && (
             <p className="text-center text-sm mt-2 text-neutral-300">{saveMessage}</p>
           )}
+
+          <p className="text-center text-xs text-neutral-500 mt-4">
+            Once saved, text HELP to the alert number for ad-hoc commands (overall time check,
+            stage time check, class-only comparisons).
+          </p>
         </>
       )}
     </div>

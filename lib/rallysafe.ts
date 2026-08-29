@@ -69,7 +69,8 @@ export interface RSEntry {
   speed: number;
   lastMessageTimestamp: string;
   isUnitActive: boolean;
-  stageNumber?: number;
+  stageNumber: number;
+  racingStatus: number;
   [key: string]: unknown;
 }
 
@@ -123,4 +124,33 @@ export async function getEntries(eventId: number): Promise<RSEntry[]> {
 
 export async function getEventDetails(eventId: number) {
   return rsFetch<RSEvent>(`/event/details?eventId=${eventId}`);
+}
+
+export interface RSStage {
+  locationGroupId: number;
+  eventId: number;
+  number: number;
+  name: string;
+  length: number;
+  isTransit: boolean;
+  status: number; // 4 = completed, seen empirically
+  order: number;
+}
+
+/** Human-readable stage list (SS1 Crossroads etc) with mile length and completion status. */
+export async function listStages(eventId: number): Promise<RSStage[]> {
+  return rsFetch<RSStage[]>(`/itinerary/stages?eventId=${eventId}&includePolyline=false`);
+}
+
+/**
+ * Extracts the Results API eventId (a completely different numbering scheme than the
+ * live-tracking eventId) from the event's resultsUrl field, e.g.
+ * "https://results.statusas.com/events/625/stagetimes" -> 625.
+ */
+export async function getResultsEventId(eventId: number): Promise<number | null> {
+  const details = await getEventDetails(eventId);
+  const url = (details as { resultsUrl?: string }).resultsUrl;
+  if (!url) return null;
+  const match = url.match(/\/events\/(\d+)\//);
+  return match ? Number(match[1]) : null;
 }
