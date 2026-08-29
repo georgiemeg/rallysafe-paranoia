@@ -221,8 +221,8 @@ export default function Home() {
               key={i}
               d={d}
               fill="none"
-              stroke="#0d1b1e"
-              strokeOpacity={0.08}
+              stroke="#f5dfbb"
+              strokeOpacity={0.4}
               strokeWidth={1.5}
             />
           ))}
