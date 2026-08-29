@@ -253,8 +253,8 @@ export default function Home() {
 
         {selectedEvent && (
           <>
-            {/* Phone number — orange block */}
-            <section className="mb-6 rounded-2xl bg-brand-orange p-5 sm:p-6">
+            {/* Phone number — same red as "PARANOIA" in the hero title */}
+            <section className="mb-6 rounded-2xl bg-brand-maroon p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-3">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-ink text-brand-gold font-mono text-sm font-bold shrink-0">
                   02
