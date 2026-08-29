@@ -198,8 +198,66 @@ export default function Home() {
     >
       {/* Bold color-blocked hero, inspired by the reference's cover treatment */}
       <div className="relative overflow-hidden bg-brand-gold text-brand-ink">
-        <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-brand-orange/40 blur-2xl" />
         <div className="absolute -left-10 bottom-0 w-40 h-40 rounded-full bg-brand-teal/40 blur-2xl" />
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox="0 0 1280 320"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {/* Smooth topo contour lines — same general sweep as the red route,
+              rendered as gentle bezier curves instead of jagged segments. */}
+          {[
+            "M420,40 C560,20 640,70 720,55 C820,35 900,90 1000,110 C1080,125 1140,150 1180,175",
+            "M410,65 C550,45 630,95 715,80 C815,60 895,115 995,135 C1075,150 1135,175 1175,200",
+            "M400,90 C540,70 620,120 705,105 C805,85 885,140 985,160 C1065,175 1125,200 1165,225",
+            "M390,115 C530,95 610,145 695,130 C795,110 875,165 975,185 C1055,200 1115,225 1155,250",
+            "M380,140 C520,120 600,170 685,155 C785,135 865,190 965,210 C1045,225 1105,250 1145,275",
+            "M370,165 C510,145 590,195 675,180 C775,160 855,215 955,235 C1035,250 1095,275 1135,300",
+            "M360,190 C500,170 580,220 665,205 C765,185 845,240 945,260 C1010,272 1060,290 1100,308",
+            "M350,215 C490,195 570,245 655,230 C755,210 835,255 925,270 C980,280 1020,292 1055,305",
+          ].map((d, i) => (
+            <path
+              key={i}
+              d={d}
+              fill="none"
+              stroke="#0d1b1e"
+              strokeOpacity={0.08}
+              strokeWidth={1.5}
+            />
+          ))}
+
+          {/* Red route line — exact shape preserved, only rendering cleaned up
+              (rounded joins/caps instead of jagged mitered corners). */}
+          <path
+            d="M480,95 L520,140 L548,175 L598,120 L628,148 L652,190 L682,155 L702,95 L742,112 L782,150 L822,178 L862,198 L900,230 L930,252 L958,290 L972,310"
+            fill="none"
+            stroke="#960200"
+            strokeWidth={5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Diagonal accent stripes — straight, contained fully within the
+              box, progressively thicker toward the right edge. */}
+          {Array.from({ length: 14 }).map((_, i) => {
+            const x = 960 + i * 24;
+            const width = 2 + i * 0.85;
+            return (
+              <line
+                key={i}
+                x1={x}
+                y1={0}
+                x2={x - 130}
+                y2={320}
+                stroke="#0a0a0a"
+                strokeOpacity={0.85}
+                strokeWidth={width}
+                strokeLinecap="round"
+              />
+            );
+          })}
+        </svg>
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-brand-ink/70 mb-3">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-maroon animate-pulse" />
