@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { getDeviceId, getSavedPhone, savePhoneLocally } from "@/lib/device";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 interface RSEvent {
   eventId: number;
@@ -17,13 +18,44 @@ interface RSEntrySlim {
   carModelYear: string;
 }
 
-const ALERT_LABELS: { key: string; label: string; icon: string; araOnly?: boolean }[] = [
-  { key: "stageStart", label: "Stage Start", icon: "\uD83D\uDEA6" },
-  { key: "stageFinish", label: "Stage Finish", icon: "\uD83C\uDFC1" },
-  { key: "stageTimes", label: "Stage Times", icon: "\u23F1\uFE0F" },
-  { key: "overallTime", label: "Overall Time", icon: "\uD83C\uDFC6" },
-  { key: "incidentDetection", label: "Incident Detection", icon: "\uD83D\uDEA8" },
-  { key: "serviceEstimates", label: "Service Estimates", icon: "\uD83D\uDD27", araOnly: true },
+const ALERT_LABELS: { key: string; label: string; icon: string; araOnly?: boolean; info: string }[] = [
+  {
+    key: "stageStart",
+    label: "Stage Start",
+    icon: "\uD83D\uDEA6",
+    info: "Texts you the moment this car starts a stage, so you know they're actually on their way.",
+  },
+  {
+    key: "stageFinish",
+    label: "Stage Finish",
+    icon: "\uD83C\uDFC1",
+    info: "Texts you the moment this car finishes a stage — the anxious wait is over.",
+  },
+  {
+    key: "stageTimes",
+    label: "Stage Times",
+    icon: "\u23F1\uFE0F",
+    info: "After the stage, sends that stage's time + position, compared to the same stage's prior pass and the cars ahead. You can also text back anytime to get an updated re-check.",
+  },
+  {
+    key: "overallTime",
+    label: "Overall Time",
+    icon: "\uD83C\uDFC6",
+    info: "Sends overall rally position + the 3 cars ahead and behind. Text \"CAR # CLASS ONLY\" to switch to comparing only within that car's class instead of every car.",
+  },
+  {
+    key: "incidentDetection",
+    label: "Incident Detection",
+    icon: "\uD83D\uDEA8",
+    info: "Uses the car's raw accelerometer data (not just GPS position) — if it stops truly moving for 3+ minutes on stage, you get an alert. Normal signal gaps/chunky updates don't trigger it.",
+  },
+  {
+    key: "serviceEstimates",
+    label: "Service Estimates",
+    icon: "\uD83D\uDD27",
+    araOnly: true,
+    info: "Sends predicted arrival times at each upcoming service point. Only available for ARA-sanctioned events — other rallies don't publish this data.",
+  },
 ];
 
 type AlertsMap = Record<string, boolean>;
@@ -291,6 +323,7 @@ export default function Home() {
                 <h2 className="text-base sm:text-lg font-[family-name:var(--font-display)] tracking-tight text-white">
                   Alert Number
                 </h2>
+                <InfoTooltip text="The phone number that receives every text alert for the cars you track below. Saved to this device only." />
               </div>
               <input
                 type="tel"
@@ -313,6 +346,7 @@ export default function Home() {
                 <h2 className="text-base sm:text-lg font-[family-name:var(--font-display)] tracking-tight text-white">
                   Choose Who To Track
                 </h2>
+                <InfoTooltip text="Search and add cars from the entry list on the left. Each added car moves to the Tracked panel on the right, where you choose exactly which alerts it should send." />
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Left: available entries */}
@@ -453,6 +487,7 @@ export default function Home() {
                                 />
                                 <span>{a.icon}</span>
                                 {a.label}
+                                <InfoTooltip text={a.info} />
                               </label>
                             );
                           })}
@@ -483,6 +518,9 @@ export default function Home() {
             <p className="text-center text-xs text-neutral-500 mt-4">
               Once saved, text HELP to the alert number for ad-hoc commands (overall time check,
               stage time check, class-only comparisons).
+            </p>
+            <p className="text-center text-[11px] text-neutral-600 mt-1.5 font-mono">
+              Live positions update continuously · alerts and standings refresh every ~20s
             </p>
           </>
         )}

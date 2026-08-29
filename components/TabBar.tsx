@@ -7,6 +7,7 @@ const TABS = [
   { href: "/", label: "Setup", icon: "\u2699\uFE0F", color: "bg-brand-gold text-brand-ink" },
   { href: "/live", label: "RallySafe Live", icon: "\uD83D\uDCE1", color: "bg-brand-golden-orange text-white" },
   { href: "/results", label: "Results", icon: "\uD83C\uDFC1", color: "bg-brand-teal text-white" },
+  { href: "/help", label: "Help", icon: "\u2753", color: "bg-neutral-300 text-brand-ink" },
 ];
 
 export function TabBar() {
