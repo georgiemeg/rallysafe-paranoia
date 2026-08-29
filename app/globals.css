@@ -117,4 +117,48 @@ body {
   color: #fff;
 }
 
+/* Selected-row indicator (Results table, tap-to-see-service-times) — a tiny
+   mini caution-tape border: diagonal black/gold stripes, thin (~3px). Applied
+   to each <td> rather than the <tr> itself, since border-image on table rows
+   is unreliable across browsers/mobile — borders on cells always render. */
+.selected-row-tape > td {
+  border-top: 3px solid;
+  border-bottom: 3px solid;
+  border-image-source: repeating-linear-gradient(
+    45deg,
+    #0a0a0a 0px,
+    #0a0a0a 5px,
+    #d5a021 5px,
+    #d5a021 10px
+  );
+  border-image-slice: 3;
+  border-image-width: 3px;
+  border-image-repeat: round;
+}
+.selected-row-tape > td:first-child {
+  border-left: 3px solid;
+  border-image-source: repeating-linear-gradient(
+    45deg,
+    #0a0a0a 0px,
+    #0a0a0a 5px,
+    #d5a021 5px,
+    #d5a021 10px
+  );
+  border-image-slice: 3;
+  border-image-width: 3px;
+  border-image-repeat: round;
+}
+.selected-row-tape > td:last-child {
+  border-right: 3px solid;
+  border-image-source: repeating-linear-gradient(
+    45deg,
+    #0a0a0a 0px,
+    #0a0a0a 5px,
+    #d5a021 5px,
+    #d5a021 10px
+  );
+  border-image-slice: 3;
+  border-image-width: 3px;
+  border-image-repeat: round;
+}
 

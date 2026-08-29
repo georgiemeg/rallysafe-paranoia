@@ -243,7 +243,7 @@ export default function ResultsPage() {
                                 : row.position === 3
                                   ? "bg-[#CD7F32]/10"
                                   : ""
-                        } ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-amber-400" : ""}`}
+                        } ${serviceCarNumber === row.number ? "selected-row-tape" : ""}`}
                         onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
                       >
                         <td className="px-3 py-2">
@@ -267,19 +267,19 @@ export default function ResultsPage() {
                           <span
                             className={`font-bold ${
                               row.position === 1
-                                ? "text-amber-400"
+                                ? `text-amber-400${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(251,191,36,0.9)]"}`
                                 : row.position === 2
-                                  ? "text-[#C0C0C0]"
+                                  ? `text-[#C0C0C0]${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(224,224,224,0.9)]"}`
                                   : row.position === 3
-                                    ? "text-[#CD7F32]"
-                                    : "text-[#22E5FF] drop-shadow-[0_0_6px_rgba(34,229,255,0.85)]"
+                                    ? `text-[#CD7F32]${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(205,127,50,0.9)]"}`
+                                    : `text-[#22E5FF]${row.isRetired ? "" : " drop-shadow-[0_0_6px_rgba(34,229,255,0.85)]"}`
                             }`}
                           >
                             #{row.number}
                           </span>
                           {row.isRetired && <span className="ml-2 text-neutral-500 text-xs">DNF</span>}
                           {row.isPenalized && (
-                            <span className="ml-2 text-red-400 text-xs font-bold">
+                            <span className="ml-2 text-red-400 text-xs font-bold drop-shadow-[0_0_6px_rgba(248,113,113,0.85)]">
                               PEN
                               {row.penaltySecondsNet !== 0 && (
                                 <span
