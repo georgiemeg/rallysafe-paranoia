@@ -15,11 +15,21 @@ export function TabBar() {
 
   return (
     <nav
-      className={`sticky top-0 z-40 border-b backdrop-blur ${
+      className={`sticky top-0 z-40 border-b backdrop-blur overflow-hidden ${
         isResults
           ? "border-white/10 bg-[#0a0e14]/95 supports-[backdrop-filter]:bg-[#0a0e14]/80"
-          : "border-brand-ink/10 bg-canvas/95 supports-[backdrop-filter]:bg-canvas/80"
+          : "border-black/20"
       }`}
+      style={
+        isResults
+          ? undefined
+          : {
+              backgroundImage:
+                "repeating-linear-gradient(-45deg, #0a0a0a 0px, #0a0a0a 22px, #D5A021 22px, #D5A021 44px)",
+              backgroundSize: "62.23px 62.23px",
+              animation: "caution-scroll 1.6s linear infinite",
+            }
+      }
     >
       <div className="max-w-6xl mx-auto flex items-stretch gap-1 px-1 py-1">
         {TABS.map((tab) => {
@@ -33,7 +43,7 @@ export function TabBar() {
                   ? `${tab.color} font-bold shadow-lg`
                   : isResults
                     ? "text-neutral-500 hover:text-neutral-200 hover:bg-white/5"
-                    : "text-brand-ink/50 hover:text-brand-ink hover:bg-brand-ink/5"
+                    : "text-white/80 hover:text-white hover:bg-black/20 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
               }`}
             >
               <span className="hidden sm:inline mr-1.5">{tab.icon}</span>

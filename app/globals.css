@@ -32,3 +32,15 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Caution-tape "barber pole" scroll — background-position slides one full
+   diagonal repeat so the stripes appear to rotate continuously. */
+@keyframes caution-scroll {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 62.23px 0;
+  }
+}
+
