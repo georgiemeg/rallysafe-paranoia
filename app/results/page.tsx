@@ -33,6 +33,7 @@ interface OverallResponse {
   stages: { name: string; status: string; length: number }[];
   standings: OverallStanding[];
   serviceIn: ServiceEntry[];
+  timeZone: string;
 }
 
 function msToClock(ms: number): string {
@@ -255,7 +256,10 @@ export default function ResultsPage() {
               {serviceCarNumber !== null && (
                 <div className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.03] p-4">
                   <h3 className="text-xs font-mono uppercase tracking-widest text-emerald-400/80 mb-3">
-                    Predicted Service Times — Car #{serviceCarNumber}
+                    Predicted Service Times — Car #{serviceCarNumber}{" "}
+                    <span className="text-neutral-500 normal-case tracking-normal">
+                      (rally-local time, UTC{overall.timeZone})
+                    </span>
                   </h3>
                   {(() => {
                     const entries = overall.serviceIn

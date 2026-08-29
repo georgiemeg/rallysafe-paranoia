@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
       stages: data.stages.map((s) => ({ name: s.name, status: s.status, length: s.length })),
       standings,
       serviceIn: data.serviceIn,
+      timeZone: data.timeZone,
     });
   } catch (err) {
     console.error(err);
