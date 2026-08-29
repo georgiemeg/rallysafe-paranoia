@@ -238,9 +238,9 @@ export default function ResultsPage() {
                             : row.position === 1
                               ? "bg-amber-400/10"
                               : row.position === 2
-                                ? "bg-teal-400/10"
+                                ? "bg-[#C0C0C0]/10"
                                 : row.position === 3
-                                  ? "bg-orange-500/10"
+                                  ? "bg-[#CD7F32]/10"
                                   : ""
                         } ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-amber-400" : ""}`}
                         onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
@@ -252,8 +252,8 @@ export default function ResultsPage() {
                                 row.position === 1
                                   ? "bg-amber-400 text-black"
                                   : row.position === 2
-                                    ? "bg-teal-400 text-black"
-                                    : "bg-orange-500 text-white"
+                                    ? "bg-[#C0C0C0] text-black"
+                                    : "bg-[#CD7F32] text-black"
                               }`}
                             >
                               {row.position}
