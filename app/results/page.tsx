@@ -234,7 +234,7 @@ export default function ResultsPage() {
                         key={row.number}
                         className={`font-mono cursor-pointer hover:bg-white/[0.04] transition-colors ${row.isRetired ? "opacity-40" : ""} ${
                           row.isPenalized
-                            ? "bg-red-950/40"
+                            ? "bg-[#CD7F32]/10"
                             : row.position === 1
                               ? "bg-amber-400/10"
                               : row.position === 2
