@@ -429,7 +429,7 @@ export default function Home() {
               disabled={saving}
               className="save-btn w-full bg-brand-gold hover:bg-brand-gold/90 disabled:opacity-50 text-brand-ink font-bold rounded-full py-4 uppercase tracking-wider text-sm shadow-[0_0_30px_rgba(213,160,33,0.25)]"
             >
-              {saving ? "Saving…" : "Save & Start Tracking"}
+              <span className="save-btn__label">{saving ? "Saving…" : "Save & Start Tracking"}</span>
             </button>
             {saveMessage && (
               <p className="text-center text-sm mt-2 text-neutral-100">{saveMessage}</p>

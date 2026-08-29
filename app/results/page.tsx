@@ -272,7 +272,7 @@ export default function ResultsPage() {
                                   ? "text-[#C0C0C0]"
                                   : row.position === 3
                                     ? "text-[#CD7F32]"
-                                    : "text-brand-teal"
+                                    : "text-[#22E5FF] drop-shadow-[0_0_6px_rgba(34,229,255,0.85)]"
                             }`}
                           >
                             #{row.number}
