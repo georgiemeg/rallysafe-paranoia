@@ -114,7 +114,10 @@ export default function ResultsPage() {
     setServiceCarNumber(carNumber === serviceCarNumber ? null : carNumber);
   };
 
-  // Poll overall standings every 20s while that view is active
+  // Poll overall standings every 20s while that view is active. For ARA events, use the
+  // combiner feed (has predicted service times for the Service Estimates alert). For any
+  // other event, fall back to the universal endpoint built on RallySafe's official public
+  // results API, which works for any event with a results page — just without service times.
   useEffect(() => {
     if (!selected || view !== "overall") return;
     let cancelled = false;
@@ -122,11 +125,14 @@ export default function ResultsPage() {
     const load = () => {
       setOverallLoading(true);
       setOverallError("");
-      fetch(`/api/results/overall?eventName=${encodeURIComponent(selected.name)}`)
+      const url = isAraEvent
+        ? `/api/results/overall?eventName=${encodeURIComponent(selected.name)}`
+        : `/api/events/${selected.eventId}/overall-official`;
+      fetch(url)
         .then((r) => r.json())
         .then((d) => {
           if (cancelled) return;
-          if (d.standings) setOverall(d);
+          if (d.standings) setOverall({ title: selected.name, ...d });
           else setOverallError(d.error ?? "No overall standings available yet.");
         })
         .catch(() => !cancelled && setOverallError("Failed to load overall standings."))
@@ -139,7 +145,7 @@ export default function ResultsPage() {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [selected, view]);
+  }, [selected, view, isAraEvent]);
 
   // Resolve results.statusas.com event id lazily, only when the Stage/Split Times tab is opened
   useEffect(() => {
