@@ -236,6 +236,14 @@ export default function ResultsPage() {
                   {overall.stages.filter((s) => s.status === "Completed").length} / {overall.stages.length} stages done
                 </span>
               </div>
+              {!isAraEvent && (
+                <div className="mb-3 rounded-lg border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-300/90">
+                  ⚠️ Penalty data is not available for this event (non-ARA events only — official
+                  penalties are published separately by each rally and aren&apos;t exposed on the
+                  public live-tracking feed this table is built from). Times/positions shown are
+                  accurate but may not reflect penalties applied after the fact.
+                </div>
+              )}
               <div className="rounded-xl border border-white/10 bg-[#11151c] overflow-x-auto">
                 <table className="w-full min-w-[720px] text-sm">
                   <thead>
