@@ -271,8 +271,8 @@ export default function ResultsPage() {
                                 : row.position === 2
                                   ? `text-[#C0C0C0]${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(224,224,224,0.9)]"}`
                                   : row.position === 3
-                                    ? `text-[#CD7F32]${row.isRetired ? "" : " drop-shadow-[0_0_8px_rgba(255,159,64,0.95)]"}`
-                                    : `text-[#22E5FF]${row.isRetired ? "" : " drop-shadow-[0_0_6px_rgba(34,229,255,0.85)]"}`
+                                    ? `text-[#CD7F32]${row.isRetired ? "" : " drop-shadow-[0_0_8px_rgba(205,127,50,0.95)]"}`
+                                    : `text-[#00A8C4]${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(0,168,196,0.9)]"}`
                             }`}
                           >
                             #{row.number}
