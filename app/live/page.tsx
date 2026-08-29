@@ -13,12 +13,12 @@ export default function LivePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/events")
+    fetch("/api/events/active")
       .then((r) => r.json())
       .then((d) => {
         const list: RSEvent[] = d.events ?? [];
         setEvents(list);
-        if (list.length > 0) setSelected(list[0].eventId);
+        setSelected(d.activeEventId ?? list[0]?.eventId ?? null);
       })
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));

@@ -57,9 +57,15 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/events")
+    fetch("/api/events/active")
       .then((r) => r.json())
-      .then((d) => setEvents(d.events ?? []))
+      .then((d) => {
+        const list = d.events ?? [];
+        setEvents(list);
+        const activeId = d.activeEventId ?? list[0]?.eventId ?? null;
+        const match = list.find((ev: RSEvent) => ev.eventId === activeId);
+        if (match) setSelectedEvent(match);
+      })
       .catch(() => setEvents([]))
       .finally(() => setLoadingEvents(false));
   }, []);

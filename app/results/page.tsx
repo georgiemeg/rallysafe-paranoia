@@ -12,6 +12,8 @@ interface OverallStanding {
   number: number;
   carClass: string;
   carModel: string;
+  driverName: string;
+  codriverName: string;
   stagesCompleted: number;
   totalMs: number;
   gapToLeaderMs: number;
@@ -20,10 +22,17 @@ interface OverallStanding {
   isPenalized: boolean;
 }
 
+interface ServiceEntry {
+  serviceNumber: number;
+  number: number;
+  due: string;
+}
+
 interface OverallResponse {
   title: string;
   stages: { name: string; status: string; length: number }[];
   standings: OverallStanding[];
+  serviceIn: ServiceEntry[];
 }
 
 function msToClock(ms: number): string {
@@ -39,6 +48,23 @@ function msToClock(ms: number): string {
 function gapLabel(ms: number): string {
   if (ms === 0) return "—";
   return `+${msToClock(ms)}`;
+}
+
+/** The combiner feed's ISO timestamps are mislabeled UTC ("Z") but the numbers are already
+ * the event's local time (e.g. "13:35:00.000Z" really means 1:35 PM rally-local, GMT-05:00
+ * in this case) — confirmed by cross-checking against the site's own displayed times. Do NOT
+ * run these through `new Date().toLocaleTimeString()`, which would wrongly convert them to the
+ * viewer's timezone. Parse the raw digits instead. */
+function formatLocalIsoAsIs(iso: string): string {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return iso;
+  const [, year, month, day, hour, minute] = m;
+  const date = new Date(Number(year), Number(month) - 1, Number(day));
+  const weekday = date.toLocaleDateString(undefined, { weekday: "short" });
+  const h = Number(hour);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${weekday} ${h12}:${minute} ${ampm}`;
 }
 
 export default function ResultsPage() {
@@ -57,13 +83,16 @@ export default function ResultsPage() {
   const [resolving, setResolving] = useState(false);
   const [iframeError, setIframeError] = useState("");
 
+  const [serviceCarNumber, setServiceCarNumber] = useState<number | null>(null);
+
   useEffect(() => {
-    fetch("/api/events")
+    fetch("/api/events/active")
       .then((r) => r.json())
       .then((d) => {
         const list: RSEvent[] = d.events ?? [];
         setEvents(list);
-        if (list.length > 0) setSelected(list[0]);
+        const activeId = d.activeEventId ?? list[0]?.eventId ?? null;
+        setSelected(list.find((ev) => ev.eventId === activeId) ?? list[0] ?? null);
       })
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
@@ -185,6 +214,7 @@ export default function ResultsPage() {
                     <tr className="bg-white/[0.03] text-neutral-500 text-xs uppercase tracking-wide font-mono">
                       <th className="text-left px-3 py-2">Pos</th>
                       <th className="text-left px-3 py-2">Car</th>
+                      <th className="text-left px-3 py-2">Driver / Co-Driver</th>
                       <th className="text-left px-3 py-2">Class</th>
                       <th className="text-right px-3 py-2">Total</th>
                       <th className="text-right px-3 py-2">Gap</th>
@@ -195,13 +225,17 @@ export default function ResultsPage() {
                     {overall.standings.map((row) => (
                       <tr
                         key={row.number}
-                        className={`font-mono ${row.isRetired ? "opacity-40" : ""} ${row.position <= 3 ? "bg-emerald-400/[0.03]" : ""}`}
+                        className={`font-mono cursor-pointer hover:bg-white/[0.03] ${row.isRetired ? "opacity-40" : ""} ${row.position <= 3 ? "bg-emerald-400/[0.03]" : ""} ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-emerald-400/40" : ""}`}
+                        onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
                       >
                         <td className="px-3 py-2 text-neutral-400">{row.position}</td>
                         <td className="px-3 py-2">
                           <span className="text-emerald-400">#{row.number}</span>
                           {row.isRetired && <span className="ml-2 text-red-400 text-xs">DNF</span>}
                           {row.isPenalized && <span className="ml-2 text-yellow-400 text-xs">PEN</span>}
+                        </td>
+                        <td className="px-3 py-2 text-neutral-300 font-sans text-xs whitespace-nowrap">
+                          {row.driverName} / {row.codriverName}
                         </td>
                         <td className="px-3 py-2 text-neutral-500">{row.carClass}</td>
                         <td className="px-3 py-2 text-right">{msToClock(row.totalMs)}</td>
@@ -214,8 +248,45 @@ export default function ResultsPage() {
               </div>
               <p className="text-xs text-neutral-600 mt-3">
                 Refreshes automatically every 20s. Totals sum every completed stage time; DNF cars
-                shown grayed out at the bottom.
+                shown grayed out at the bottom. Click a row to see that car&apos;s predicted
+                service times below.
               </p>
+
+              {serviceCarNumber !== null && (
+                <div className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.03] p-4">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-emerald-400/80 mb-3">
+                    Predicted Service Times — Car #{serviceCarNumber}
+                  </h3>
+                  {(() => {
+                    const entries = overall.serviceIn
+                      .filter((s) => s.number === serviceCarNumber)
+                      .sort((a, b) => a.serviceNumber - b.serviceNumber);
+                    if (entries.length === 0) {
+                      return (
+                        <p className="text-sm text-neutral-500">
+                          No service predictions available for this car yet.
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+                        {entries.map((s) => {
+                          return (
+                            <div key={s.serviceNumber} className="bg-black/30 rounded-md p-3">
+                              <div className="text-xs text-neutral-500 font-mono uppercase mb-1">
+                                Service {s.serviceNumber}
+                              </div>
+                              <div className="font-mono text-sm text-neutral-100">
+                                {formatLocalIsoAsIs(s.due)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           ) : null}
         </div>

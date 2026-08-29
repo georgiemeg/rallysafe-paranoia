@@ -17,11 +17,12 @@ export async function GET(req: NextRequest) {
         { status: 404 }
       );
     }
-    const standings = computeOverallStandings(data);
+    const standings = await computeOverallStandings(data);
     return NextResponse.json({
       title: data.title,
       stages: data.stages.map((s) => ({ name: s.name, status: s.status, length: s.length })),
       standings,
+      serviceIn: data.serviceIn,
     });
   } catch (err) {
     console.error(err);

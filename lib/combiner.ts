@@ -20,7 +20,7 @@ export interface CombinerEntry {
   number: number;
   carClass: string;
   carModel: string;
-  category: string;
+  category: string; // e.g. "National" | "Regional" | "STRYKER Challenge" (a separate support series)
   driverUID: number;
   codriverUID: number;
   sf: number; // speed factor
@@ -30,6 +30,39 @@ export interface CombinerEntry {
   splits: string[][];
 }
 
+interface UidEntry {
+  uid: number;
+  f: string; // first name
+  l: string; // last name
+}
+
+const UID_CACHE_TTL_MS = 5 * 60_000; // names rarely change; cache longer than the live data
+let uidCache: { data: UidEntry[]; fetchedAt: number } | null = null;
+
+async function fetchUidTable(): Promise<UidEntry[]> {
+  if (uidCache && Date.now() - uidCache.fetchedAt < UID_CACHE_TTL_MS) return uidCache.data;
+  const res = await fetch("https://sneakattackrally.com/ARACombinerThing/data/uidsSmall.json", {
+    cache: "no-store",
+  });
+  if (!res.ok) return uidCache?.data ?? [];
+  const data: UidEntry[] = await res.json();
+  uidCache = { data, fetchedAt: Date.now() };
+  return data;
+}
+
+function nameFor(uids: UidEntry[], uid: number): string {
+  const entry = uids[uid];
+  if (!entry) return "Unknown";
+  const full = `${entry.f ?? ""} ${entry.l ?? ""}`.trim();
+  return full || "Unknown";
+}
+
+export interface CombinerServiceEntry {
+  serviceNumber: number;
+  number: number; // car number
+  due: string; // ISO timestamp, predicted arrival at this service
+}
+
 export interface CombinerData {
   slug: string;
   title: string;
@@ -37,6 +70,7 @@ export interface CombinerData {
   finishDate: string;
   stages: CombinerStage[];
   entries: CombinerEntry[];
+  serviceIn: CombinerServiceEntry[];
   timeZone: string;
 }
 
@@ -112,6 +146,8 @@ export interface OverallStanding {
   number: number;
   carClass: string;
   carModel: string;
+  driverName: string;
+  codriverName: string;
   stagesCompleted: number;
   totalMs: number;
   gapToLeaderMs: number;
@@ -123,10 +159,16 @@ export interface OverallStanding {
 /** Computes running overall totals from every completed-stage time for every entry,
  * sorted ascending by total time. Cars with retirements are pushed to the bottom but
  * still shown (marked isRetired) rather than silently dropped. */
-export function computeOverallStandings(data: CombinerData): OverallStanding[] {
+export async function computeOverallStandings(data: CombinerData): Promise<OverallStanding[]> {
+  const uids = await fetchUidTable();
   const rows: OverallStanding[] = [];
 
   for (const entry of data.entries) {
+    // STRYKER Challenge is a separate support series with its own shorter-stage format;
+    // it is NOT part of the main National/Regional overall classification (confirmed against
+    // the source site's own "Single table" view, which excludes it entirely).
+    if (entry.category === "STRYKER Challenge") continue;
+
     let totalMs = 0;
     let stagesCompleted = 0;
     for (const t of entry.times) {
@@ -143,6 +185,8 @@ export function computeOverallStandings(data: CombinerData): OverallStanding[] {
       number: entry.number,
       carClass: entry.carClass,
       carModel: entry.carModel,
+      driverName: nameFor(uids, entry.driverUID),
+      codriverName: nameFor(uids, entry.codriverUID),
       stagesCompleted,
       totalMs,
       gapToLeaderMs: 0,
