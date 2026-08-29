@@ -37,10 +37,10 @@ body {
    diagonal repeat so the stripes appear to rotate continuously. */
 @keyframes caution-scroll {
   from {
-    background-position: 0 0;
+    background-position: 62.23px 0;
   }
   to {
-    background-position: 62.23px 0;
+    background-position: 0 0;
   }
 }
 
