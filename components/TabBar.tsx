@@ -25,9 +25,9 @@ export function TabBar() {
           ? undefined
           : {
               backgroundImage:
-                "repeating-linear-gradient(-45deg, #0a0a0a 0px, #0a0a0a 22px, #D5A021 22px, #D5A021 44px)",
+                "repeating-linear-gradient(45deg, #0a0a0a 0px, #0a0a0a 22px, #D5A021 22px, #D5A021 44px)",
               backgroundSize: "62.23px 62.23px",
-              animation: "caution-scroll 1.6s linear infinite",
+              animation: "caution-scroll 1.76s linear infinite",
             }
       }
     >
