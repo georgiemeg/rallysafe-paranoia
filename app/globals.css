@@ -10,6 +10,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Brand palette (Alex's design) — replaces the emerald mission-control accent */
+  --color-brand-ink: #0d1b1e;
+  --color-brand-gold: #d5a021;
+  --color-brand-teal: #00798c;
+  --color-brand-orange: #f34213;
+  --color-brand-maroon: #960200;
 }
 
 @media (prefers-color-scheme: dark) {

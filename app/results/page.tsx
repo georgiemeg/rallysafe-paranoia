@@ -145,7 +145,7 @@ export default function ResultsPage() {
   return (
     <div className="h-[calc(100vh-49px)] flex flex-col">
       <div className="border-b border-white/10 bg-[#0a0d14] px-4 py-3 flex flex-wrap items-center gap-3">
-        <span className="text-xs font-mono uppercase tracking-widest text-emerald-400/80">
+        <span className="text-xs font-mono uppercase tracking-widest text-brand-gold/80">
           🏁 Results
         </span>
         {loading ? (
@@ -171,7 +171,7 @@ export default function ResultsPage() {
           <button
             onClick={() => setView("overall")}
             className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wide rounded ${
-              view === "overall" ? "bg-emerald-600 text-white" : "text-neutral-400 hover:text-neutral-200"
+              view === "overall" ? "bg-brand-teal text-white" : "text-neutral-400 hover:text-neutral-200"
             }`}
           >
             Overall (Live)
@@ -179,7 +179,7 @@ export default function ResultsPage() {
           <button
             onClick={() => setView("stagetimes")}
             className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wide rounded ${
-              view === "stagetimes" ? "bg-emerald-600 text-white" : "text-neutral-400 hover:text-neutral-200"
+              view === "stagetimes" ? "bg-brand-teal text-white" : "text-neutral-400 hover:text-neutral-200"
             }`}
           >
             Stage / Split Times
@@ -226,12 +226,12 @@ export default function ResultsPage() {
                     {overall.standings.map((row) => (
                       <tr
                         key={row.number}
-                        className={`font-mono cursor-pointer hover:bg-white/[0.03] ${row.isRetired ? "opacity-40" : ""} ${row.position <= 3 ? "bg-emerald-400/[0.03]" : ""} ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-emerald-400/40" : ""}`}
+                        className={`font-mono cursor-pointer hover:bg-white/[0.03] ${row.isRetired ? "opacity-40" : ""} ${row.position <= 3 ? "bg-brand-gold/[0.04]" : ""} ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-brand-teal/40" : ""}`}
                         onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
                       >
                         <td className="px-3 py-2 text-neutral-400">{row.position}</td>
                         <td className="px-3 py-2">
-                          <span className="text-emerald-400">#{row.number}</span>
+                          <span className="text-brand-gold">#{row.number}</span>
                           {row.isRetired && <span className="ml-2 text-red-400 text-xs">DNF</span>}
                           {row.isPenalized && <span className="ml-2 text-yellow-400 text-xs">PEN</span>}
                         </td>
@@ -254,8 +254,8 @@ export default function ResultsPage() {
               </p>
 
               {serviceCarNumber !== null && (
-                <div className="mt-4 rounded-lg border border-emerald-400/20 bg-emerald-400/[0.03] p-4">
-                  <h3 className="text-xs font-mono uppercase tracking-widest text-emerald-400/80 mb-3">
+                <div className="mt-4 rounded-lg border border-brand-gold/20 bg-brand-gold/[0.04] p-4">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-brand-gold/80 mb-3">
                     Predicted Service Times — Car #{serviceCarNumber}{" "}
                     <span className="text-neutral-500 normal-case tracking-normal">
                       (rally-local time, UTC{overall.timeZone})

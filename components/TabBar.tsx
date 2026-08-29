@@ -23,14 +23,14 @@ export function TabBar() {
               href={tab.href}
               className={`relative flex-1 sm:flex-none sm:px-6 px-2 py-3 text-center text-xs sm:text-sm font-mono uppercase tracking-widest transition-colors ${
                 active
-                  ? "text-emerald-400"
+                  ? "text-brand-gold"
                   : "text-neutral-500 hover:text-neutral-300"
               }`}
             >
               <span className="hidden sm:inline mr-1.5">{tab.icon}</span>
               {tab.label}
               {active && (
-                <span className="absolute left-0 right-0 -bottom-px h-[2px] bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <span className="absolute left-0 right-0 -bottom-px h-[2px] bg-brand-gold shadow-[0_0_8px_rgba(213,160,33,0.8)]" />
               )}
             </Link>
           );

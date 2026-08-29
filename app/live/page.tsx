@@ -27,7 +27,7 @@ export default function LivePage() {
   return (
     <div className="h-[calc(100vh-49px)] flex flex-col">
       <div className="border-b border-white/10 bg-[#0a0d14] px-4 py-3 flex flex-wrap items-center gap-3">
-        <span className="text-xs font-mono uppercase tracking-widest text-emerald-400/80">
+        <span className="text-xs font-mono uppercase tracking-widest text-brand-gold/80">
           📡 Live Tracking
         </span>
         {loading ? (

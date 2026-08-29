@@ -193,12 +193,12 @@ export default function Home() {
       {/* HUD header */}
       <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.08),_transparent_60%)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-emerald-400/70 mb-2">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-brand-gold/70 mb-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
             System Online
           </div>
           <h1 className="text-3xl sm:text-5xl tracking-tight font-[family-name:var(--font-display)] leading-none">
-            RALLYSAFE <span className="text-emerald-400">PARANOIA</span>
+            RALLYSAFE <span className="text-brand-gold">PARANOIA</span>
           </h1>
           <p className="text-neutral-500 mt-2 text-sm max-w-xl">
             Track your friends live on stage. Get texted the moment they start, finish, post a
@@ -211,7 +211,7 @@ export default function Home() {
         {/* Event picker */}
         <section className="mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-emerald-400 font-mono text-xs">01</span>
+            <span className="text-brand-gold font-mono text-xs">01</span>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
               Select Event
             </h2>
@@ -222,7 +222,7 @@ export default function Home() {
             <p className="text-neutral-500 text-sm">No live/upcoming events found right now.</p>
           ) : (
             <select
-              className="w-full bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+              className="w-full bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-brand-teal/50"
               value={selectedEvent?.eventId ?? ""}
               onChange={(e) => {
                 const ev = events.find((ev) => ev.eventId === Number(e.target.value));
@@ -244,7 +244,7 @@ export default function Home() {
             {/* Phone number */}
             <section className="mb-6">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-emerald-400 font-mono text-xs">02</span>
+                <span className="text-brand-gold font-mono text-xs">02</span>
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
                   Alert Number
                 </h2>
@@ -252,7 +252,7 @@ export default function Home() {
               <input
                 type="tel"
                 placeholder="+1 314 555 1234"
-                className="w-full max-w-sm bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                className="w-full max-w-sm bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-brand-teal/50"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
@@ -264,7 +264,7 @@ export default function Home() {
             {/* Entries + Tracked */}
             <section className="mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-emerald-400 font-mono text-xs">03</span>
+                <span className="text-brand-gold font-mono text-xs">03</span>
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
                   Choose Who To Track
                 </h2>
@@ -276,7 +276,7 @@ export default function Home() {
                     <input
                       type="text"
                       placeholder="Search car #, driver, co-driver…"
-                      className="w-full bg-[#05070c] border border-white/10 rounded-md px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                      className="w-full bg-[#05070c] border border-white/10 rounded-md px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-brand-teal/50"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
@@ -292,7 +292,7 @@ export default function Home() {
                         >
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-sm truncate">
-                              <span className="font-mono text-emerald-400">#{entry.identifier}</span>
+                              <span className="font-mono text-brand-gold">#{entry.identifier}</span>
                               {entry.carClass ? (
                                 <span className="text-neutral-500"> ({entry.carClass})</span>
                               ) : (
@@ -306,7 +306,7 @@ export default function Home() {
                           </div>
                           <button
                             onClick={() => addCar(entry)}
-                            className="shrink-0 bg-white/5 hover:bg-emerald-600 hover:text-white text-neutral-300 text-xs font-mono uppercase tracking-wide px-3 py-1.5 rounded-md transition-colors"
+                            className="shrink-0 bg-white/5 hover:bg-brand-teal hover:text-white text-neutral-300 text-xs font-mono uppercase tracking-wide px-3 py-1.5 rounded-md transition-colors"
                           >
                             Add →
                           </button>
@@ -324,7 +324,7 @@ export default function Home() {
                               </p>
                               <button
                                 onClick={() => selectedEvent && setSelectedEvent({ ...selectedEvent })}
-                                className="mt-3 text-emerald-400 hover:text-emerald-300 text-xs underline"
+                                className="mt-3 text-brand-gold hover:text-brand-gold text-xs underline"
                               >
                                 Retry
                               </button>
@@ -339,9 +339,9 @@ export default function Home() {
                 </div>
 
                 {/* Right: tracked cars with per-alert checkboxes */}
-                <div className="rounded-lg border border-emerald-400/20 bg-[#0a0d14] overflow-hidden">
-                  <div className="px-4 py-3 border-b border-white/10 bg-emerald-400/[0.04] flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-widest text-emerald-400/80">
+                <div className="rounded-lg border border-brand-gold/20 bg-[#0a0d14] overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/10 bg-brand-gold/[0.05] flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase tracking-widest text-brand-gold/80">
                       Tracked
                     </span>
                     <span className="text-xs font-mono text-neutral-500">{tracked.size} car(s)</span>
@@ -352,7 +352,7 @@ export default function Home() {
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <div className="font-medium text-sm truncate">
-                              <span className="font-mono text-emerald-400">#{car.identifier}</span>
+                              <span className="font-mono text-brand-gold">#{car.identifier}</span>
                               {car.carClass ? (
                                 <span className="text-neutral-500"> ({car.carClass})</span>
                               ) : (
@@ -379,7 +379,7 @@ export default function Home() {
                             >
                               <input
                                 type="checkbox"
-                                className="w-3.5 h-3.5 accent-emerald-500"
+                                className="w-3.5 h-3.5 accent-brand-teal"
                                 checked={car.alerts[a.key] ?? false}
                                 onChange={() => toggleAlert(car.entryId, a.key)}
                               />
@@ -403,7 +403,7 @@ export default function Home() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold rounded-lg py-3.5 uppercase tracking-wider text-sm transition-colors shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+              className="w-full bg-brand-teal hover:bg-brand-teal disabled:opacity-50 text-white font-semibold rounded-lg py-3.5 uppercase tracking-wider text-sm transition-colors shadow-[0_0_20px_rgba(0,121,140,0.25)]"
             >
               {saving ? "Saving…" : "Save & Start Tracking"}
             </button>
@@ -436,7 +436,7 @@ export default function Home() {
             </p>
             <button
               onClick={() => setShowConfirmPopup(false)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg px-4 py-2 w-full"
+              className="bg-brand-teal hover:bg-brand-teal text-white font-medium rounded-lg px-4 py-2 w-full"
             >
               Got it
             </button>
