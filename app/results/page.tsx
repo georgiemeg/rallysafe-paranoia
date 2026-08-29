@@ -265,15 +265,28 @@ export default function ResultsPage() {
                         </td>
                         <td className="px-3 py-2">
                           <span
-                            className={`font-bold ${
+                            className="font-bold"
+                            style={
                               row.position === 1
-                                ? `text-amber-400${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(251,191,36,0.9)]"}`
+                                ? {
+                                    color: "#fbbf24",
+                                    filter: row.isRetired ? undefined : "drop-shadow(0 0 7px rgba(251,191,36,0.9))",
+                                  }
                                 : row.position === 2
-                                  ? `text-[#C0C0C0]${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(224,224,224,0.9)]"}`
+                                  ? {
+                                      color: "#C0C0C0",
+                                      filter: row.isRetired ? undefined : "drop-shadow(0 0 7px rgba(224,224,224,0.9))",
+                                    }
                                   : row.position === 3
-                                    ? `text-[#CD7F32]${row.isRetired ? "" : " drop-shadow-[0_0_8px_rgba(205,127,50,0.95)]"}`
-                                    : `text-[#00A8C4]${row.isRetired ? "" : " drop-shadow-[0_0_7px_rgba(0,168,196,0.9)]"}`
-                            }`}
+                                    ? {
+                                        color: "#CD7F32",
+                                        filter: row.isRetired ? undefined : "drop-shadow(0 0 8px rgba(205,127,50,0.95))",
+                                      }
+                                    : {
+                                        color: "#00A8C4",
+                                        filter: row.isRetired ? undefined : "drop-shadow(0 0 7px rgba(0,168,196,0.9))",
+                                      }
+                            }
                           >
                             #{row.number}
                           </span>
