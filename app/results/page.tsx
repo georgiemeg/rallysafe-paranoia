@@ -188,7 +188,13 @@ export default function ResultsPage() {
       </div>
 
       {view === "overall" ? (
-        <div className="flex-1 overflow-y-auto bg-[#0a0e14]">
+        <div
+          className="flex-1 overflow-y-auto bg-[#0a0e14]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 7px)",
+          }}
+        >
           {overallLoading && !overall ? (
             <div className="flex items-center justify-center h-full text-neutral-500 text-sm">
               Loading overall standings…
