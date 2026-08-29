@@ -17,12 +17,12 @@ interface RSEntrySlim {
   carModelYear: string;
 }
 
-const ALERT_LABELS: { key: string; label: string }[] = [
-  { key: "stageStart", label: "Stage Start" },
-  { key: "stageFinish", label: "Stage Finish" },
-  { key: "stageTimes", label: "Stage Times" },
-  { key: "overallTime", label: "Overall Time" },
-  { key: "incidentDetection", label: "Incident Detection" },
+const ALERT_LABELS: { key: string; label: string; icon: string }[] = [
+  { key: "stageStart", label: "Stage Start", icon: "🚦" },
+  { key: "stageFinish", label: "Stage Finish", icon: "🏁" },
+  { key: "stageTimes", label: "Stage Times", icon: "⏱️" },
+  { key: "overallTime", label: "Overall Time", icon: "🏆" },
+  { key: "incidentDetection", label: "Incident Detection", icon: "🚨" },
 ];
 
 type AlertsMap = Record<string, boolean>;
@@ -69,16 +69,25 @@ export default function Home() {
     setLoadingEntries(true);
     setTracked(new Map());
 
+    const safeJson = async (res: Response) => {
+      if (!res.ok) return null;
+      try {
+        return await res.json();
+      } catch {
+        return null;
+      }
+    };
+
     Promise.all([
-      fetch(`/api/events/${selectedEvent.eventId}/entries`).then((r) => r.json()),
-      fetch(`/api/subscriptions?deviceId=${deviceId}&eventId=${selectedEvent.eventId}`).then((r) => r.json()),
+      fetch(`/api/events/${selectedEvent.eventId}/entries`).then(safeJson),
+      fetch(`/api/subscriptions?deviceId=${deviceId}&eventId=${selectedEvent.eventId}`).then(safeJson),
     ])
       .then(([entriesData, subsData]) => {
-        const entryList: RSEntrySlim[] = entriesData.entries ?? [];
+        const entryList: RSEntrySlim[] = entriesData?.entries ?? [];
         setEntries(entryList);
 
         const existingMap = new Map<number, TrackedCar>();
-        for (const sub of subsData.subscriptions ?? []) {
+        for (const sub of subsData?.subscriptions ?? []) {
           const matching = entryList.find((e) => e.entryId === sub.entryId);
           if (matching) {
             existingMap.set(sub.entryId, { ...matching, alerts: { ...defaultAlerts(), ...sub.alerts } });
@@ -86,7 +95,7 @@ export default function Home() {
         }
         setTracked(existingMap);
 
-        if (subsData.device?.phone) setPhone(subsData.device.phone);
+        if (subsData?.device?.phone) setPhone(subsData.device.phone);
       })
       .finally(() => setLoadingEntries(false));
   }, [selectedEvent, deviceId]);
@@ -174,163 +183,235 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 p-6 max-w-6xl mx-auto">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">🏁 RallySafe Paranoia</h1>
-        <p className="text-neutral-400 mt-1">
-          Track your friends live on stage — texts for stage starts, finishes, times, and stalls.
-        </p>
-      </header>
+    <div className="min-h-[calc(100vh-49px)] bg-[#05070c] text-neutral-100">
+      {/* HUD header */}
+      <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.08),_transparent_60%)]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-emerald-400/70 mb-2">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            System Online
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight font-mono">
+            RALLYSAFE <span className="text-emerald-400">PARANOIA</span>
+          </h1>
+          <p className="text-neutral-500 mt-2 text-sm max-w-xl">
+            Track your friends live on stage. Get texted the moment they start, finish, post a
+            time, or go quiet.
+          </p>
+        </div>
+      </div>
 
-      <section className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">1. Pick an event</h2>
-        {loadingEvents ? (
-          <p className="text-neutral-500">Loading events…</p>
-        ) : events.length === 0 ? (
-          <p className="text-neutral-500">No live/upcoming events found right now.</p>
-        ) : (
-          <select
-            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100"
-            value={selectedEvent?.eventId ?? ""}
-            onChange={(e) => {
-              const ev = events.find((ev) => ev.eventId === Number(e.target.value));
-              setSelectedEvent(ev ?? null);
-            }}
-          >
-            <option value="">— Select an event —</option>
-            {events.map((ev) => (
-              <option key={ev.eventId} value={ev.eventId}>
-                {ev.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </section>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Event picker */}
+        <section className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-emerald-400 font-mono text-xs">01</span>
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
+              Select Event
+            </h2>
+          </div>
+          {loadingEvents ? (
+            <p className="text-neutral-500 text-sm">Loading events…</p>
+          ) : events.length === 0 ? (
+            <p className="text-neutral-500 text-sm">No live/upcoming events found right now.</p>
+          ) : (
+            <select
+              className="w-full bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+              value={selectedEvent?.eventId ?? ""}
+              onChange={(e) => {
+                const ev = events.find((ev) => ev.eventId === Number(e.target.value));
+                setSelectedEvent(ev ?? null);
+              }}
+            >
+              <option value="">— Select an event —</option>
+              {events.map((ev) => (
+                <option key={ev.eventId} value={ev.eventId}>
+                  {ev.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </section>
 
-      {selectedEvent && (
-        <>
-          <section className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">2. Your phone number</h2>
-            <input
-              type="tel"
-              placeholder="+1 314 555 1234"
-              className="w-full max-w-sm bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-neutral-100"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <p className="text-xs text-neutral-500 mt-1">
-              Saved to this device — you won&apos;t need to re-enter it here next time.
-            </p>
-          </section>
-
-          <section className="mb-6 grid md:grid-cols-2 gap-4">
-            {/* Left: available entries */}
-            <div>
-              <h2 className="text-lg font-semibold mb-2">3. All entries</h2>
+        {selectedEvent && (
+          <>
+            {/* Phone number */}
+            <section className="mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-emerald-400 font-mono text-xs">02</span>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
+                  Alert Number
+                </h2>
+              </div>
               <input
-                type="text"
-                placeholder="Search car #, driver, co-driver…"
-                className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2 mb-3 text-neutral-100"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                type="tel"
+                placeholder="+1 314 555 1234"
+                className="w-full max-w-sm bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
               />
-              {loadingEntries ? (
-                <p className="text-neutral-500">Loading entries…</p>
-              ) : (
-                <div className="border border-neutral-800 rounded-lg divide-y divide-neutral-800 max-h-[60vh] overflow-y-auto">
-                  {filteredAvailable.map((entry) => (
-                    <div
-                      key={entry.entryId}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-900"
-                    >
-                      <div className="flex-1">
-                        <div className="font-medium">
-                          #{entry.identifier}
-                          {entry.carClass ? ` (${entry.carClass})` : ""} — {entry.driver}
-                          {entry.navigator ? ` / ${entry.navigator}` : ""}
+              <p className="text-xs text-neutral-600 mt-1.5">
+                Saved to this device — no need to re-enter it next time.
+              </p>
+            </section>
+
+            {/* Entries + Tracked */}
+            <section className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-emerald-400 font-mono text-xs">03</span>
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
+                  Choose Who To Track
+                </h2>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Left: available entries */}
+                <div className="rounded-lg border border-white/10 bg-[#0a0d14] overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+                    <input
+                      type="text"
+                      placeholder="Search car #, driver, co-driver…"
+                      className="w-full bg-[#05070c] border border-white/10 rounded-md px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                    />
+                  </div>
+                  {loadingEntries ? (
+                    <p className="text-neutral-500 text-sm p-4">Loading entries…</p>
+                  ) : (
+                    <div className="divide-y divide-white/5 max-h-[55vh] overflow-y-auto">
+                      {filteredAvailable.map((entry) => (
+                        <div
+                          key={entry.entryId}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">
+                              <span className="font-mono text-emerald-400">#{entry.identifier}</span>
+                              {entry.carClass ? (
+                                <span className="text-neutral-500"> ({entry.carClass})</span>
+                              ) : (
+                                ""
+                              )}
+                              {" — "}
+                              {entry.driver}
+                              {entry.navigator ? ` / ${entry.navigator}` : ""}
+                            </div>
+                            <div className="text-xs text-neutral-600 truncate">{entry.carModelYear}</div>
+                          </div>
+                          <button
+                            onClick={() => addCar(entry)}
+                            className="shrink-0 bg-white/5 hover:bg-emerald-600 hover:text-white text-neutral-300 text-xs font-mono uppercase tracking-wide px-3 py-1.5 rounded-md transition-colors"
+                          >
+                            Add →
+                          </button>
                         </div>
-                        <div className="text-xs text-neutral-500">{entry.carModelYear}</div>
-                      </div>
-                      <button
-                        onClick={() => addCar(entry)}
-                        className="shrink-0 bg-neutral-800 hover:bg-emerald-700 text-sm px-3 py-1.5 rounded-md"
-                      >
-                        Add →
-                      </button>
+                      ))}
+                      {filteredAvailable.length === 0 && (
+                        <div className="px-4 py-8 text-center text-neutral-500 text-sm">
+                          {entries.length === 0 ? (
+                            <>
+                              <p className="mb-1">No entries available from RallySafe right now.</p>
+                              <p className="text-xs text-neutral-600">
+                                This usually means the event is between legs/days (e.g.
+                                overnight) — entries typically reappear once the next stage day
+                                starts.
+                              </p>
+                              <button
+                                onClick={() => selectedEvent && setSelectedEvent({ ...selectedEvent })}
+                                className="mt-3 text-emerald-400 hover:text-emerald-300 text-xs underline"
+                              >
+                                Retry
+                              </button>
+                            </>
+                          ) : (
+                            "All matching entries are already tracked."
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {filteredAvailable.length === 0 && (
-                    <p className="px-4 py-6 text-center text-neutral-500">
-                      {entries.length === 0 ? "No entries." : "All matching entries are already tracked."}
-                    </p>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Right: tracked cars with per-alert checkboxes */}
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Tracked ({tracked.size})</h2>
-              <div className="border border-neutral-800 rounded-lg divide-y divide-neutral-800 max-h-[60vh] overflow-y-auto">
-                {Array.from(tracked.values()).map((car) => (
-                  <div key={car.entryId} className="px-4 py-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="font-medium">
-                          #{car.identifier}
-                          {car.carClass ? ` (${car.carClass})` : ""} — {car.driver}
-                          {car.navigator ? ` / ${car.navigator}` : ""}
-                        </div>
-                        <div className="text-xs text-neutral-500">{car.carModelYear}</div>
-                      </div>
-                      <button
-                        onClick={() => removeCar(car.entryId)}
-                        className="shrink-0 text-red-400 hover:text-red-300 text-sm px-2"
-                      >
-                        ✕ Remove
-                      </button>
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
-                      {ALERT_LABELS.map((a) => (
-                        <label key={a.key} className="flex items-center gap-2 text-sm cursor-pointer">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 accent-emerald-500"
-                            checked={car.alerts[a.key] ?? false}
-                            onChange={() => toggleAlert(car.entryId, a.key)}
-                          />
-                          {a.label}
-                        </label>
-                      ))}
-                    </div>
+                {/* Right: tracked cars with per-alert checkboxes */}
+                <div className="rounded-lg border border-emerald-400/20 bg-[#0a0d14] overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/10 bg-emerald-400/[0.04] flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase tracking-widest text-emerald-400/80">
+                      Tracked
+                    </span>
+                    <span className="text-xs font-mono text-neutral-500">{tracked.size} car(s)</span>
                   </div>
-                ))}
-                {tracked.size === 0 && (
-                  <p className="px-4 py-6 text-center text-neutral-500">
-                    Click &quot;Add →&quot; on the left to start tracking cars.
-                  </p>
-                )}
+                  <div className="divide-y divide-white/5 max-h-[55vh] overflow-y-auto">
+                    {Array.from(tracked.values()).map((car) => (
+                      <div key={car.entryId} className="px-4 py-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="font-medium text-sm truncate">
+                              <span className="font-mono text-emerald-400">#{car.identifier}</span>
+                              {car.carClass ? (
+                                <span className="text-neutral-500"> ({car.carClass})</span>
+                              ) : (
+                                ""
+                              )}
+                              {" — "}
+                              {car.driver}
+                              {car.navigator ? ` / ${car.navigator}` : ""}
+                            </div>
+                            <div className="text-xs text-neutral-600 truncate">{car.carModelYear}</div>
+                          </div>
+                          <button
+                            onClick={() => removeCar(car.entryId)}
+                            className="shrink-0 text-red-400/80 hover:text-red-300 text-xs px-1"
+                          >
+                            ✕ Remove
+                          </button>
+                        </div>
+                        <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                          {ALERT_LABELS.map((a) => (
+                            <label
+                              key={a.key}
+                              className="flex items-center gap-2 text-xs cursor-pointer text-neutral-400 hover:text-neutral-200"
+                            >
+                              <input
+                                type="checkbox"
+                                className="w-3.5 h-3.5 accent-emerald-500"
+                                checked={car.alerts[a.key] ?? false}
+                                onChange={() => toggleAlert(car.entryId, a.key)}
+                              />
+                              <span>{a.icon}</span>
+                              {a.label}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    {tracked.size === 0 && (
+                      <p className="px-4 py-8 text-center text-neutral-500 text-sm">
+                        Click &quot;Add →&quot; on the left to start tracking cars.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold rounded-lg py-3"
-          >
-            {saving ? "Saving…" : "Save & start tracking"}
-          </button>
-          {saveMessage && (
-            <p className="text-center text-sm mt-2 text-neutral-300">{saveMessage}</p>
-          )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold rounded-lg py-3.5 uppercase tracking-wider text-sm transition-colors shadow-[0_0_20px_rgba(16,185,129,0.15)]"
+            >
+              {saving ? "Saving…" : "Save & Start Tracking"}
+            </button>
+            {saveMessage && (
+              <p className="text-center text-sm mt-2 text-neutral-300">{saveMessage}</p>
+            )}
 
-          <p className="text-center text-xs text-neutral-500 mt-4">
-            Once saved, text HELP to the alert number for ad-hoc commands (overall time check,
-            stage time check, class-only comparisons).
-          </p>
-        </>
-      )}
+            <p className="text-center text-xs text-neutral-600 mt-4">
+              Once saved, text HELP to the alert number for ad-hoc commands (overall time check,
+              stage time check, class-only comparisons).
+            </p>
+          </>
+        )}
+      </div>
 
       {showConfirmPopup && (
         <div
@@ -338,7 +419,7 @@ export default function Home() {
           onClick={() => setShowConfirmPopup(false)}
         >
           <div
-            className="bg-neutral-900 border border-neutral-700 rounded-xl p-6 max-w-sm w-full text-center"
+            className="bg-[#0a0d14] border border-white/10 rounded-xl p-6 max-w-sm w-full text-center"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-3xl mb-2">📩</div>
