@@ -427,7 +427,7 @@ export default function Home() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-brand-gold hover:bg-brand-gold/90 disabled:opacity-50 text-brand-ink font-bold rounded-full py-4 uppercase tracking-wider text-sm transition-colors shadow-[0_0_30px_rgba(213,160,33,0.25)]"
+              className="save-btn w-full bg-brand-gold hover:bg-brand-gold/90 disabled:opacity-50 text-brand-ink font-bold rounded-full py-4 uppercase tracking-wider text-sm shadow-[0_0_30px_rgba(213,160,33,0.25)]"
             >
               {saving ? "Saving…" : "Save & Start Tracking"}
             </button>
