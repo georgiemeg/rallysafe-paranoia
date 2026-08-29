@@ -191,7 +191,7 @@ export default function Home() {
   return (
     <div className="min-h-[calc(100vh-49px)] bg-[#05070c] text-neutral-100">
       {/* HUD header */}
-      <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.08),_transparent_60%)]">
+      <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(213,160,33,0.10),_transparent_60%)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-brand-gold/70 mb-2">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
@@ -324,7 +324,7 @@ export default function Home() {
                               </p>
                               <button
                                 onClick={() => selectedEvent && setSelectedEvent({ ...selectedEvent })}
-                                className="mt-3 text-brand-gold hover:text-brand-gold text-xs underline"
+                                className="mt-3 text-brand-orange hover:text-brand-orange/80 text-xs underline"
                               >
                                 Retry
                               </button>
@@ -366,7 +366,7 @@ export default function Home() {
                           </div>
                           <button
                             onClick={() => removeCar(car.entryId)}
-                            className="shrink-0 text-red-400/80 hover:text-red-300 text-xs px-1"
+                            className="shrink-0 text-brand-maroon/90 hover:text-brand-maroon text-xs px-1"
                           >
                             ✕ Remove
                           </button>
@@ -379,7 +379,7 @@ export default function Home() {
                             >
                               <input
                                 type="checkbox"
-                                className="w-3.5 h-3.5 accent-brand-teal"
+                                className={`w-3.5 h-3.5 ${a.key === "incidentDetection" ? "accent-brand-orange" : "accent-brand-teal"}`}
                                 checked={car.alerts[a.key] ?? false}
                                 onChange={() => toggleAlert(car.entryId, a.key)}
                               />

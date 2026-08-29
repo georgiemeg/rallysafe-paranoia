@@ -232,8 +232,8 @@ export default function ResultsPage() {
                         <td className="px-3 py-2 text-neutral-400">{row.position}</td>
                         <td className="px-3 py-2">
                           <span className="text-brand-gold">#{row.number}</span>
-                          {row.isRetired && <span className="ml-2 text-red-400 text-xs">DNF</span>}
-                          {row.isPenalized && <span className="ml-2 text-yellow-400 text-xs">PEN</span>}
+                          {row.isRetired && <span className="ml-2 text-brand-maroon text-xs">DNF</span>}
+                          {row.isPenalized && <span className="ml-2 text-brand-orange text-xs">PEN</span>}
                         </td>
                         <td className="px-3 py-2 text-neutral-300 font-sans text-xs whitespace-nowrap">
                           {row.driverName} / {row.codriverName}
