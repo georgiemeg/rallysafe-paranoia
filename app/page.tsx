@@ -18,11 +18,11 @@ interface RSEntrySlim {
 }
 
 const ALERT_LABELS: { key: string; label: string; icon: string }[] = [
-  { key: "stageStart", label: "Stage Start", icon: "🚦" },
-  { key: "stageFinish", label: "Stage Finish", icon: "🏁" },
-  { key: "stageTimes", label: "Stage Times", icon: "⏱️" },
-  { key: "overallTime", label: "Overall Time", icon: "🏆" },
-  { key: "incidentDetection", label: "Incident Detection", icon: "🚨" },
+  { key: "stageStart", label: "Stage Start", icon: "\uD83D\uDEA6" },
+  { key: "stageFinish", label: "Stage Finish", icon: "\uD83C\uDFC1" },
+  { key: "stageTimes", label: "Stage Times", icon: "\u23F1\uFE0F" },
+  { key: "overallTime", label: "Overall Time", icon: "\uD83C\uDFC6" },
+  { key: "incidentDetection", label: "Incident Detection", icon: "\uD83D\uDEA8" },
 ];
 
 type AlertsMap = Record<string, boolean>;
@@ -189,40 +189,46 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-49px)] bg-[#05070c] text-neutral-100">
-      {/* HUD header */}
-      <div className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(213,160,33,0.10),_transparent_60%)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-brand-gold/70 mb-2">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
+    <div className="min-h-[calc(100vh-49px)] bg-brand-ink text-neutral-100">
+      {/* Bold color-blocked hero, inspired by the reference's cover treatment */}
+      <div className="relative overflow-hidden bg-brand-gold text-brand-ink">
+        <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-brand-orange/40 blur-2xl" />
+        <div className="absolute -left-10 bottom-0 w-40 h-40 rounded-full bg-brand-teal/40 blur-2xl" />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-brand-ink/70 mb-3">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-maroon animate-pulse" />
             System Online
           </div>
-          <h1 className="text-3xl sm:text-5xl tracking-tight font-[family-name:var(--font-display)] leading-none">
-            RALLYSAFE <span className="text-brand-gold">PARANOIA</span>
+          <h1 className="text-4xl sm:text-6xl tracking-tight font-[family-name:var(--font-display)] leading-[0.95] text-brand-ink">
+            RALLYSAFE
+            <br />
+            <span className="text-brand-maroon">PARANOIA</span>
           </h1>
-          <p className="text-neutral-500 mt-2 text-sm max-w-xl">
+          <p className="text-brand-ink/70 mt-3 text-sm sm:text-base max-w-xl font-medium">
             Track your friends live on stage. Get texted the moment they start, finish, post a
             time, or go quiet.
           </p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {/* Event picker */}
-        <section className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-brand-gold font-mono text-xs">01</span>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        {/* Event picker — teal block */}
+        <section className="mb-6 rounded-2xl bg-brand-teal p-5 sm:p-6">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-ink text-brand-gold font-mono text-sm font-bold shrink-0">
+              01
+            </span>
+            <h2 className="text-base sm:text-lg font-[family-name:var(--font-display)] tracking-tight text-white">
               Select Event
             </h2>
           </div>
           {loadingEvents ? (
-            <p className="text-neutral-500 text-sm">Loading events…</p>
+            <p className="text-white/70 text-sm">Loading events…</p>
           ) : events.length === 0 ? (
-            <p className="text-neutral-500 text-sm">No live/upcoming events found right now.</p>
+            <p className="text-white/70 text-sm">No live/upcoming events found right now.</p>
           ) : (
             <select
-              className="w-full bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-brand-teal/50"
+              className="w-full bg-brand-ink border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
               value={selectedEvent?.eventId ?? ""}
               onChange={(e) => {
                 const ev = events.find((ev) => ev.eventId === Number(e.target.value));
@@ -241,42 +247,46 @@ export default function Home() {
 
         {selectedEvent && (
           <>
-            {/* Phone number */}
-            <section className="mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-brand-gold font-mono text-xs">02</span>
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
+            {/* Phone number — orange block */}
+            <section className="mb-6 rounded-2xl bg-brand-orange p-5 sm:p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-ink text-brand-gold font-mono text-sm font-bold shrink-0">
+                  02
+                </span>
+                <h2 className="text-base sm:text-lg font-[family-name:var(--font-display)] tracking-tight text-white">
                   Alert Number
                 </h2>
               </div>
               <input
                 type="tel"
                 placeholder="+1 314 555 1234"
-                className="w-full max-w-sm bg-[#0a0d14] border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-1 focus:ring-brand-teal/50"
+                className="w-full max-w-sm bg-brand-ink border border-white/10 rounded-lg px-4 py-3 text-neutral-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
-              <p className="text-xs text-neutral-600 mt-1.5">
+              <p className="text-xs text-white/80 mt-1.5">
                 Saved to this device — no need to re-enter it next time.
               </p>
             </section>
 
-            {/* Entries + Tracked */}
-            <section className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-brand-gold font-mono text-xs">03</span>
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-300">
+            {/* Entries + Tracked — maroon block */}
+            <section className="mb-6 rounded-2xl bg-brand-maroon p-5 sm:p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-ink text-brand-gold font-mono text-sm font-bold shrink-0">
+                  03
+                </span>
+                <h2 className="text-base sm:text-lg font-[family-name:var(--font-display)] tracking-tight text-white">
                   Choose Who To Track
                 </h2>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 {/* Left: available entries */}
-                <div className="rounded-lg border border-white/10 bg-[#0a0d14] overflow-hidden">
-                  <div className="px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+                <div className="rounded-xl border border-white/10 bg-brand-ink overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/10 bg-white/[0.04]">
                     <input
                       type="text"
                       placeholder="Search car #, driver, co-driver…"
-                      className="w-full bg-[#05070c] border border-white/10 rounded-md px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-brand-teal/50"
+                      className="w-full bg-black/30 border border-white/10 rounded-md px-3 py-2 text-sm text-neutral-100 focus:outline-none focus:ring-2 focus:ring-brand-gold"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
@@ -288,25 +298,28 @@ export default function Home() {
                       {filteredAvailable.map((entry) => (
                         <div
                           key={entry.entryId}
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.03] transition-colors"
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors"
                         >
+                          <span className="flex items-center justify-center w-9 h-9 rounded-full bg-brand-gold text-brand-ink font-mono text-xs font-bold shrink-0">
+                            {entry.identifier}
+                          </span>
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-sm truncate">
-                              <span className="font-mono text-brand-gold">#{entry.identifier}</span>
                               {entry.carClass ? (
-                                <span className="text-neutral-500"> ({entry.carClass})</span>
+                                <span className="text-brand-teal font-mono text-xs uppercase mr-1.5">
+                                  {entry.carClass}
+                                </span>
                               ) : (
                                 ""
                               )}
-                              {" — "}
                               {entry.driver}
                               {entry.navigator ? ` / ${entry.navigator}` : ""}
                             </div>
-                            <div className="text-xs text-neutral-600 truncate">{entry.carModelYear}</div>
+                            <div className="text-xs text-neutral-500 truncate">{entry.carModelYear}</div>
                           </div>
                           <button
                             onClick={() => addCar(entry)}
-                            className="shrink-0 bg-white/5 hover:bg-brand-teal hover:text-white text-neutral-300 text-xs font-mono uppercase tracking-wide px-3 py-1.5 rounded-md transition-colors"
+                            className="shrink-0 bg-brand-teal hover:bg-brand-gold hover:text-brand-ink text-white text-xs font-mono uppercase tracking-wide px-3 py-1.5 rounded-full transition-colors"
                           >
                             Add →
                           </button>
@@ -339,39 +352,44 @@ export default function Home() {
                 </div>
 
                 {/* Right: tracked cars with per-alert checkboxes */}
-                <div className="rounded-lg border border-brand-gold/20 bg-[#0a0d14] overflow-hidden">
-                  <div className="px-4 py-3 border-b border-white/10 bg-brand-gold/[0.05] flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-widest text-brand-gold/80">
+                <div className="rounded-xl border border-brand-gold/30 bg-brand-ink overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/10 bg-brand-gold/10 flex items-center justify-between">
+                    <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">
                       Tracked
                     </span>
-                    <span className="text-xs font-mono text-neutral-500">{tracked.size} car(s)</span>
+                    <span className="text-xs font-mono text-neutral-400">{tracked.size} car(s)</span>
                   </div>
                   <div className="divide-y divide-white/5 max-h-[55vh] overflow-y-auto">
                     {Array.from(tracked.values()).map((car) => (
                       <div key={car.entryId} className="px-4 py-3">
                         <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="font-medium text-sm truncate">
-                              <span className="font-mono text-brand-gold">#{car.identifier}</span>
-                              {car.carClass ? (
-                                <span className="text-neutral-500"> ({car.carClass})</span>
-                              ) : (
-                                ""
-                              )}
-                              {" — "}
-                              {car.driver}
-                              {car.navigator ? ` / ${car.navigator}` : ""}
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-gold text-brand-ink font-mono text-xs font-bold shrink-0 mt-0.5">
+                              {car.identifier}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="font-medium text-sm truncate">
+                                {car.carClass ? (
+                                  <span className="text-brand-teal font-mono text-xs uppercase mr-1.5">
+                                    {car.carClass}
+                                  </span>
+                                ) : (
+                                  ""
+                                )}
+                                {car.driver}
+                                {car.navigator ? ` / ${car.navigator}` : ""}
+                              </div>
+                              <div className="text-xs text-neutral-500 truncate">{car.carModelYear}</div>
                             </div>
-                            <div className="text-xs text-neutral-600 truncate">{car.carModelYear}</div>
                           </div>
                           <button
                             onClick={() => removeCar(car.entryId)}
-                            className="shrink-0 text-brand-maroon/90 hover:text-brand-maroon text-xs px-1"
+                            className="shrink-0 text-brand-orange hover:text-brand-orange/70 text-xs px-1"
                           >
                             ✕ Remove
                           </button>
                         </div>
-                        <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                        <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5 pl-[42px]">
                           {ALERT_LABELS.map((a) => (
                             <label
                               key={a.key}
@@ -403,7 +421,7 @@ export default function Home() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-brand-teal hover:bg-brand-teal disabled:opacity-50 text-white font-semibold rounded-lg py-3.5 uppercase tracking-wider text-sm transition-colors shadow-[0_0_20px_rgba(0,121,140,0.25)]"
+              className="w-full bg-brand-gold hover:bg-brand-gold/90 disabled:opacity-50 text-brand-ink font-bold rounded-full py-4 uppercase tracking-wider text-sm transition-colors shadow-[0_0_30px_rgba(213,160,33,0.25)]"
             >
               {saving ? "Saving…" : "Save & Start Tracking"}
             </button>
@@ -411,7 +429,7 @@ export default function Home() {
               <p className="text-center text-sm mt-2 text-neutral-300">{saveMessage}</p>
             )}
 
-            <p className="text-center text-xs text-neutral-600 mt-4">
+            <p className="text-center text-xs text-neutral-500 mt-4">
               Once saved, text HELP to the alert number for ad-hoc commands (overall time check,
               stage time check, class-only comparisons).
             </p>
@@ -425,18 +443,18 @@ export default function Home() {
           onClick={() => setShowConfirmPopup(false)}
         >
           <div
-            className="bg-[#0a0d14] border border-white/10 rounded-xl p-6 max-w-sm w-full text-center"
+            className="bg-brand-gold text-brand-ink border border-white/10 rounded-2xl p-6 max-w-sm w-full text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-3xl mb-2">📩</div>
-            <h3 className="text-lg font-semibold mb-2">Confirmation text sent!</h3>
-            <p className="text-sm text-neutral-400 mb-4">
+            <div className="text-3xl mb-2">\uD83D\uDCE9</div>
+            <h3 className="text-lg font-[family-name:var(--font-display)] mb-2">Confirmation text sent!</h3>
+            <p className="text-sm text-brand-ink/70 mb-4">
               Check your phone and save this number to your contacts so alerts don&apos;t get
               missed or filtered as spam.
             </p>
             <button
               onClick={() => setShowConfirmPopup(false)}
-              className="bg-brand-teal hover:bg-brand-teal text-white font-medium rounded-lg px-4 py-2 w-full"
+              className="bg-brand-ink text-white font-medium rounded-full px-4 py-2.5 w-full"
             >
               Got it
             </button>

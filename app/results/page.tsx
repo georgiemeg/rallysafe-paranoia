@@ -144,15 +144,15 @@ export default function ResultsPage() {
 
   return (
     <div className="h-[calc(100vh-49px)] flex flex-col">
-      <div className="border-b border-white/10 bg-[#0a0d14] px-4 py-3 flex flex-wrap items-center gap-3">
-        <span className="text-xs font-mono uppercase tracking-widest text-brand-gold/80">
+      <div className="border-b border-white/10 bg-brand-teal px-4 py-3 flex flex-wrap items-center gap-3">
+        <span className="text-xs font-mono uppercase tracking-widest text-white font-bold">
           🏁 Results
         </span>
         {loading ? (
-          <span className="text-sm text-neutral-500">Loading events…</span>
+          <span className="text-sm text-white/70">Loading events…</span>
         ) : (
           <select
-            className="bg-neutral-900 border border-neutral-700 rounded-md px-3 py-1.5 text-sm text-neutral-100"
+            className="bg-brand-ink border border-white/10 rounded-md px-3 py-1.5 text-sm text-neutral-100"
             value={selected?.eventId ?? ""}
             onChange={(e) => {
               const ev = events.find((ev) => ev.eventId === Number(e.target.value));
@@ -167,19 +167,19 @@ export default function ResultsPage() {
           </select>
         )}
 
-        <div className="ml-auto flex gap-1 bg-black/30 rounded-md p-1">
+        <div className="ml-auto flex gap-1 bg-black/20 rounded-full p-1">
           <button
             onClick={() => setView("overall")}
-            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wide rounded ${
-              view === "overall" ? "bg-brand-teal text-white" : "text-neutral-400 hover:text-neutral-200"
+            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wide rounded-full transition-colors ${
+              view === "overall" ? "bg-brand-gold text-brand-ink font-bold" : "text-white/70 hover:text-white"
             }`}
           >
             Overall (Live)
           </button>
           <button
             onClick={() => setView("stagetimes")}
-            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wide rounded ${
-              view === "stagetimes" ? "bg-brand-teal text-white" : "text-neutral-400 hover:text-neutral-200"
+            className={`px-3 py-1.5 text-xs font-mono uppercase tracking-wide rounded-full transition-colors ${
+              view === "stagetimes" ? "bg-brand-gold text-brand-ink font-bold" : "text-white/70 hover:text-white"
             }`}
           >
             Stage / Split Times
@@ -226,10 +226,30 @@ export default function ResultsPage() {
                     {overall.standings.map((row) => (
                       <tr
                         key={row.number}
-                        className={`font-mono cursor-pointer hover:bg-white/[0.03] ${row.isRetired ? "opacity-40" : ""} ${row.position <= 3 ? "bg-brand-gold/[0.04]" : ""} ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-brand-teal/40" : ""}`}
+                        className={`font-mono cursor-pointer hover:bg-white/[0.04] transition-colors ${row.isRetired ? "opacity-40" : ""} ${
+                          row.position === 1
+                            ? "bg-brand-gold/10"
+                            : row.position === 2
+                              ? "bg-brand-teal/10"
+                              : row.position === 3
+                                ? "bg-brand-orange/10"
+                                : ""
+                        } ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-brand-gold" : ""}`}
                         onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
                       >
-                        <td className="px-3 py-2 text-neutral-400">{row.position}</td>
+                        <td className="px-3 py-2">
+                          {row.position <= 3 ? (
+                            <span
+                              className={`flex items-center justify-center w-6 h-6 rounded-full text-brand-ink font-bold text-xs ${
+                                row.position === 1 ? "bg-brand-gold" : row.position === 2 ? "bg-brand-teal text-white" : "bg-brand-orange"
+                              }`}
+                            >
+                              {row.position}
+                            </span>
+                          ) : (
+                            <span className="text-neutral-400">{row.position}</span>
+                          )}
+                        </td>
                         <td className="px-3 py-2">
                           <span className="text-brand-gold">#{row.number}</span>
                           {row.isRetired && <span className="ml-2 text-brand-maroon text-xs">DNF</span>}
@@ -254,10 +274,10 @@ export default function ResultsPage() {
               </p>
 
               {serviceCarNumber !== null && (
-                <div className="mt-4 rounded-lg border border-brand-gold/20 bg-brand-gold/[0.04] p-4">
-                  <h3 className="text-xs font-mono uppercase tracking-widest text-brand-gold/80 mb-3">
+                <div className="mt-4 rounded-2xl bg-brand-maroon p-4">
+                  <h3 className="text-xs font-mono uppercase tracking-widest text-white mb-3">
                     Predicted Service Times — Car #{serviceCarNumber}{" "}
-                    <span className="text-neutral-500 normal-case tracking-normal">
+                    <span className="text-white/60 normal-case tracking-normal">
                       (rally-local time, UTC{overall.timeZone})
                     </span>
                   </h3>
@@ -276,11 +296,11 @@ export default function ResultsPage() {
                       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
                         {entries.map((s) => {
                           return (
-                            <div key={s.serviceNumber} className="bg-black/30 rounded-md p-3">
-                              <div className="text-xs text-neutral-500 font-mono uppercase mb-1">
+                            <div key={s.serviceNumber} className="bg-black/25 rounded-xl p-3">
+                              <div className="text-xs text-white/60 font-mono uppercase mb-1">
                                 Service {s.serviceNumber}
                               </div>
-                              <div className="font-mono text-sm text-neutral-100">
+                              <div className="font-mono text-sm text-brand-gold font-bold">
                                 {formatLocalIsoAsIs(s.due)}
                               </div>
                             </div>

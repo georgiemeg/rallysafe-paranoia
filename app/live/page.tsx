@@ -26,15 +26,15 @@ export default function LivePage() {
 
   return (
     <div className="h-[calc(100vh-49px)] flex flex-col">
-      <div className="border-b border-white/10 bg-[#0a0d14] px-4 py-3 flex flex-wrap items-center gap-3">
-        <span className="text-xs font-mono uppercase tracking-widest text-brand-gold/80">
+      <div className="border-b border-white/10 bg-brand-orange px-4 py-3 flex flex-wrap items-center gap-3">
+        <span className="text-xs font-mono uppercase tracking-widest text-white font-bold">
           📡 Live Tracking
         </span>
         {loading ? (
-          <span className="text-sm text-neutral-500">Loading events…</span>
+          <span className="text-sm text-white/70">Loading events…</span>
         ) : (
           <select
-            className="bg-neutral-900 border border-neutral-700 rounded-md px-3 py-1.5 text-sm text-neutral-100"
+            className="bg-brand-ink border border-white/10 rounded-md px-3 py-1.5 text-sm text-neutral-100"
             value={selected ?? ""}
             onChange={(e) => setSelected(Number(e.target.value))}
           >
