@@ -205,10 +205,10 @@ export default function Home() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-maroon animate-pulse" />
             System Online
           </div>
-          <h1 className="text-4xl sm:text-6xl tracking-tight font-[family-name:var(--font-display)] leading-[0.95] text-brand-ink">
-            RALLYSAFE
+          <h1 className="tracking-tight font-[family-name:var(--font-display)] leading-[0.95] text-brand-ink">
+            <span className="text-2xl sm:text-4xl">RALLYSAFE</span>
             <br />
-            <span className="text-brand-maroon">PARANOIA</span>
+            <span className="text-brand-maroon text-4xl sm:text-6xl">PARANOIA</span>
           </h1>
           <p className="text-brand-ink/70 mt-3 text-sm sm:text-base max-w-xl font-medium">
             Track your friends live on stage. Get texted the moment they start, finish, post a

@@ -118,40 +118,24 @@ body {
 }
 
 /* Selected-row indicator (Results table, tap-to-see-service-times) — a tiny
-   mini caution-tape border: diagonal black/gold stripes, thin (~3px) top and
-   bottom bars via pseudo-elements (border-image doesn't tile gradients
-   reliably), plus solid gold side edges so it reads as a full frame. */
-.selected-row-tape {
-  position: relative;
-  box-shadow:
-    inset 3px 0 0 0 #d5a021,
-    inset -3px 0 0 0 #d5a021;
+   mini caution-tape stripe along the top/bottom of the row. Implemented as a
+   background-image on each <td> (not a pseudo-element on <tr>/<td>), because
+   position:relative on table rows/cells is unreliable on mobile Safari and
+   caused the indicator to detach and pin to the bottom of the viewport
+   instead of the row. Background-image + background-position always renders
+   relative to the element's own box, so this works identically everywhere. */
+.selected-row-tape > td {
+  background-image:
+    repeating-linear-gradient(45deg, #0a0a0a 0px, #0a0a0a 5px, #d5a021 5px, #d5a021 10px),
+    repeating-linear-gradient(45deg, #0a0a0a 0px, #0a0a0a 5px, #d5a021 5px, #d5a021 10px);
+  background-size: 14.14px 3px, 14.14px 3px;
+  background-position: top left, bottom left;
+  background-repeat: repeat-x, repeat-x;
 }
-.selected-row-tape > td:first-child,
+.selected-row-tape > td:first-child {
+  border-left: 3px solid #d5a021;
+}
 .selected-row-tape > td:last-child {
-  position: relative;
-}
-.selected-row-tape::before,
-.selected-row-tape::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background-image: repeating-linear-gradient(
-    45deg,
-    #0a0a0a 0px,
-    #0a0a0a 5px,
-    #d5a021 5px,
-    #d5a021 10px
-  );
-  background-size: 14.14px 14.14px;
-  pointer-events: none;
-}
-.selected-row-tape::before {
-  top: 0;
-}
-.selected-row-tape::after {
-  bottom: 0;
+  border-right: 3px solid #d5a021;
 }
 
