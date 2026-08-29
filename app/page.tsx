@@ -48,6 +48,7 @@ export default function Home() {
   const [loadingEntries, setLoadingEntries] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -150,6 +151,9 @@ export default function Home() {
         savePhoneLocally(data.phone);
         setPhone(data.phone);
         setSaveMessage(`Saved! Tracking ${tracked.size} car(s).`);
+        if (data.confirmationSmsSent) {
+          setShowConfirmPopup(true);
+        }
       }
     } catch {
       setSaveMessage("Network error saving subscriptions.");
@@ -326,6 +330,31 @@ export default function Home() {
             stage time check, class-only comparisons).
           </p>
         </>
+      )}
+
+      {showConfirmPopup && (
+        <div
+          className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowConfirmPopup(false)}
+        >
+          <div
+            className="bg-neutral-900 border border-neutral-700 rounded-xl p-6 max-w-sm w-full text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-3xl mb-2">📩</div>
+            <h3 className="text-lg font-semibold mb-2">Confirmation text sent!</h3>
+            <p className="text-sm text-neutral-400 mb-4">
+              Check your phone and save this number to your contacts so alerts don&apos;t get
+              missed or filtered as spam.
+            </p>
+            <button
+              onClick={() => setShowConfirmPopup(false)}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg px-4 py-2 w-full"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

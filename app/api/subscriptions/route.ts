@@ -8,6 +8,7 @@ import {
   type AlertType,
   type CarSubscription,
 } from "@/lib/store";
+import { sendSms } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export async function POST(req: NextRequest) {
 
   const now = Date.now();
   const existingDevice = await getDevice(deviceId);
+  const isNewPhone = existingDevice?.phone !== normalized;
   await saveDevice({
     deviceId,
     phone: normalized,
@@ -77,13 +79,38 @@ export async function POST(req: NextRequest) {
       carClass: c.carClass,
       carModelYear: c.carModelYear,
       alerts: fullAlerts(c.alerts),
-      classScopeOnly: false, // default; changed later via SMS command
+      classScopeOnly: false,
     })
   );
 
   await saveSubscriptionsForEvent(deviceId, eventId, carSubs);
 
-  return NextResponse.json({ ok: true, phone: normalized, savedCount: carSubs.length });
+  // Confirmation text: prompts the user to save the alert number as a contact so future
+  // texts don't land as "unknown sender", and doubles as proof the number/setup works.
+  let confirmationSmsSent = false;
+  let confirmationSmsError: string | null = null;
+  try {
+    const carList = carSubs.length > 0
+      ? carSubs.map((c) => `#${c.carNumber} ${c.driverName}`).join(", ")
+      : "no cars yet";
+    const savePrompt =
+      `RallySafe Paranoia is set up! Now tracking: ${carList}.\n\n` +
+      `Save this number to your contacts so alerts don't get missed — text HELP anytime for commands.`;
+    await sendSms(normalized, savePrompt);
+    confirmationSmsSent = true;
+  } catch (err) {
+    confirmationSmsError = err instanceof Error ? err.message : "Unknown SMS error";
+    console.error("Confirmation SMS failed:", err);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    phone: normalized,
+    savedCount: carSubs.length,
+    confirmationSmsSent,
+    confirmationSmsError,
+    isNewPhone,
+  });
 }
 
 export async function GET(req: NextRequest) {
