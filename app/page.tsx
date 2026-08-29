@@ -197,7 +197,7 @@ export default function Home() {
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             System Online
           </div>
-          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight font-mono">
+          <h1 className="text-3xl sm:text-5xl tracking-tight font-[family-name:var(--font-display)] leading-none">
             RALLYSAFE <span className="text-emerald-400">PARANOIA</span>
           </h1>
           <p className="text-neutral-500 mt-2 text-sm max-w-xl">

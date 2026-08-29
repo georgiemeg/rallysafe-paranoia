@@ -204,7 +204,7 @@ export default function ResultsPage() {
           ) : overall ? (
             <div className="max-w-4xl mx-auto p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-mono text-sm text-neutral-300">{overall.title}</h2>
+                <h2 className="font-[family-name:var(--font-display)] text-lg text-neutral-200 tracking-tight">{overall.title}</h2>
                 <span className="text-xs text-neutral-600 font-mono">
                   {overall.stages.filter((s) => s.status === "Completed").length} / {overall.stages.length} stages done
                 </span>
