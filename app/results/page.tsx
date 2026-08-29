@@ -188,15 +188,15 @@ export default function ResultsPage() {
       </div>
 
       {view === "overall" ? (
-        <div className="flex-1 overflow-y-auto bg-[#05070c]">
+        <div className="flex-1 overflow-y-auto bg-canvas">
           {overallLoading && !overall ? (
-            <div className="flex items-center justify-center h-full text-neutral-500 text-sm">
+            <div className="flex items-center justify-center h-full text-brand-ink/60 text-sm">
               Loading overall standings…
             </div>
           ) : overallError ? (
-            <div className="flex flex-col items-center justify-center h-full text-neutral-500 text-sm gap-2 px-6 text-center">
+            <div className="flex flex-col items-center justify-center h-full text-brand-ink/60 text-sm gap-2 px-6 text-center">
               <p>{overallError}</p>
-              <p className="text-xs text-neutral-600 max-w-md">
+              <p className="text-xs text-brand-ink/50 max-w-md">
                 Live overall standings are computed from real stage times as they come in — this
                 appears once the event has data flowing for the current rally weekend.
               </p>
@@ -204,15 +204,15 @@ export default function ResultsPage() {
           ) : overall ? (
             <div className="max-w-4xl mx-auto p-4">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-[family-name:var(--font-display)] text-lg text-neutral-200 tracking-tight">{overall.title}</h2>
-                <span className="text-xs text-neutral-600 font-mono">
+                <h2 className="font-[family-name:var(--font-display)] text-lg text-brand-ink tracking-tight">{overall.title}</h2>
+                <span className="text-xs text-brand-ink/50 font-mono">
                   {overall.stages.filter((s) => s.status === "Completed").length} / {overall.stages.length} stages done
                 </span>
               </div>
-              <div className="rounded-lg border border-white/10 overflow-hidden">
+              <div className="rounded-xl border border-brand-ink/10 overflow-hidden bg-white/40">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-white/[0.03] text-neutral-500 text-xs uppercase tracking-wide font-mono">
+                    <tr className="bg-brand-ink/5 text-brand-ink/60 text-xs uppercase tracking-wide font-mono">
                       <th className="text-left px-3 py-2">Pos</th>
                       <th className="text-left px-3 py-2">Car</th>
                       <th className="text-left px-3 py-2">Driver / Co-Driver</th>
@@ -222,17 +222,17 @@ export default function ResultsPage() {
                       <th className="text-right px-3 py-2">Interval</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-brand-ink/10">
                     {overall.standings.map((row) => (
                       <tr
                         key={row.number}
-                        className={`font-mono cursor-pointer hover:bg-white/[0.04] transition-colors ${row.isRetired ? "opacity-40" : ""} ${
+                        className={`font-mono cursor-pointer hover:bg-brand-ink/[0.04] transition-colors ${row.isRetired ? "opacity-40" : ""} ${
                           row.position === 1
-                            ? "bg-brand-gold/10"
+                            ? "bg-brand-gold/15"
                             : row.position === 2
-                              ? "bg-brand-teal/10"
+                              ? "bg-brand-teal/15"
                               : row.position === 3
-                                ? "bg-brand-orange/10"
+                                ? "bg-brand-orange/15"
                                 : ""
                         } ${serviceCarNumber === row.number ? "ring-1 ring-inset ring-brand-gold" : ""}`}
                         onClick={() => setServiceCarNumber(row.number === serviceCarNumber ? null : row.number)}
@@ -247,27 +247,27 @@ export default function ResultsPage() {
                               {row.position}
                             </span>
                           ) : (
-                            <span className="text-neutral-400">{row.position}</span>
+                            <span className="text-brand-ink/50">{row.position}</span>
                           )}
                         </td>
                         <td className="px-3 py-2">
-                          <span className="text-brand-gold">#{row.number}</span>
+                          <span className="text-brand-gold font-bold">#{row.number}</span>
                           {row.isRetired && <span className="ml-2 text-brand-maroon text-xs">DNF</span>}
                           {row.isPenalized && <span className="ml-2 text-brand-orange text-xs">PEN</span>}
                         </td>
-                        <td className="px-3 py-2 text-neutral-300 font-sans text-xs whitespace-nowrap">
+                        <td className="px-3 py-2 text-brand-ink font-sans text-xs whitespace-nowrap">
                           {row.driverName} / {row.codriverName}
                         </td>
-                        <td className="px-3 py-2 text-neutral-500">{row.carClass}</td>
-                        <td className="px-3 py-2 text-right">{msToClock(row.totalMs)}</td>
-                        <td className="px-3 py-2 text-right text-neutral-400">{gapLabel(row.gapToLeaderMs)}</td>
-                        <td className="px-3 py-2 text-right text-neutral-600">{gapLabel(row.gapToAheadMs)}</td>
+                        <td className="px-3 py-2 text-brand-ink/60">{row.carClass}</td>
+                        <td className="px-3 py-2 text-right text-brand-ink">{msToClock(row.totalMs)}</td>
+                        <td className="px-3 py-2 text-right text-brand-ink/70">{gapLabel(row.gapToLeaderMs)}</td>
+                        <td className="px-3 py-2 text-right text-brand-ink/50">{gapLabel(row.gapToAheadMs)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-              <p className="text-xs text-neutral-600 mt-3">
+              <p className="text-xs text-brand-ink/50 mt-3">
                 Refreshes automatically every 20s. Totals sum every completed stage time; DNF cars
                 shown grayed out at the bottom. Click a row to see that car&apos;s predicted
                 service times below.
@@ -287,7 +287,7 @@ export default function ResultsPage() {
                       .sort((a, b) => a.serviceNumber - b.serviceNumber);
                     if (entries.length === 0) {
                       return (
-                        <p className="text-sm text-neutral-500">
+                        <p className="text-sm text-white/70">
                           No service predictions available for this car yet.
                         </p>
                       );
@@ -315,11 +315,11 @@ export default function ResultsPage() {
           ) : null}
         </div>
       ) : resolving ? (
-        <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm">
+        <div className="flex-1 flex items-center justify-center text-brand-ink/60 text-sm bg-canvas">
           Loading stage/split times…
         </div>
       ) : iframeError ? (
-        <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm">
+        <div className="flex-1 flex items-center justify-center text-brand-ink/60 text-sm bg-canvas">
           {iframeError}
         </div>
       ) : resultsEventId ? (
@@ -330,7 +330,7 @@ export default function ResultsPage() {
           title="RallySafe Results"
         />
       ) : (
-        <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm">
+        <div className="flex-1 flex items-center justify-center text-brand-ink/60 text-sm bg-canvas">
           No live/upcoming events found right now.
         </div>
       )}

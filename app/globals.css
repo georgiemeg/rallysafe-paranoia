@@ -17,6 +17,7 @@
   --color-brand-teal: #00798c;
   --color-brand-orange: #f34213;
   --color-brand-maroon: #960200;
+  --color-canvas: #f5dfbb;
 }
 
 @media (prefers-color-scheme: dark) {

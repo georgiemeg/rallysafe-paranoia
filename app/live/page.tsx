@@ -54,7 +54,7 @@ export default function LivePage() {
           title="RallySafe Live Map"
         />
       ) : (
-        <div className="flex-1 flex items-center justify-center text-neutral-500 text-sm">
+        <div className="flex-1 flex items-center justify-center text-brand-ink/60 text-sm bg-canvas">
           No live/upcoming events found right now.
         </div>
       )}

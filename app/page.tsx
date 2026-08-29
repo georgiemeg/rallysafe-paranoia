@@ -189,7 +189,7 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-49px)] bg-brand-ink text-neutral-100">
+    <div className="min-h-[calc(100vh-49px)] bg-canvas text-brand-ink">
       {/* Bold color-blocked hero, inspired by the reference's cover treatment */}
       <div className="relative overflow-hidden bg-brand-gold text-brand-ink">
         <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-brand-orange/40 blur-2xl" />
@@ -426,10 +426,10 @@ export default function Home() {
               {saving ? "Saving…" : "Save & Start Tracking"}
             </button>
             {saveMessage && (
-              <p className="text-center text-sm mt-2 text-neutral-300">{saveMessage}</p>
+              <p className="text-center text-sm mt-2 text-brand-ink">{saveMessage}</p>
             )}
 
-            <p className="text-center text-xs text-neutral-500 mt-4">
+            <p className="text-center text-xs text-brand-ink/60 mt-4">
               Once saved, text HELP to the alert number for ad-hoc commands (overall time check,
               stage time check, class-only comparisons).
             </p>
@@ -446,7 +446,7 @@ export default function Home() {
             className="bg-brand-gold text-brand-ink border border-white/10 rounded-2xl p-6 max-w-sm w-full text-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-3xl mb-2">\uD83D\uDCE9</div>
+            <div className="text-3xl mb-2">📩</div>
             <h3 className="text-lg font-[family-name:var(--font-display)] mb-2">Confirmation text sent!</h3>
             <p className="text-sm text-brand-ink/70 mb-4">
               Check your phone and save this number to your contacts so alerts don&apos;t get

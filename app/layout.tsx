@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${displayFont.variable} antialiased h-full bg-[#05070c] text-neutral-100`}
+        className={`${geistSans.variable} ${geistMono.variable} ${displayFont.variable} antialiased h-full bg-canvas text-neutral-100`}
       >
         <TabBar />
         <PageTransition>{children}</PageTransition>

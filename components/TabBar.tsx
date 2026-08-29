@@ -13,7 +13,7 @@ export function TabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-white/10 bg-brand-ink/95 backdrop-blur supports-[backdrop-filter]:bg-brand-ink/80">
+    <nav className="sticky top-0 z-40 border-b border-brand-ink/10 bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/80">
       <div className="max-w-6xl mx-auto flex items-stretch gap-1 px-1 py-1">
         {TABS.map((tab) => {
           const active = pathname === tab.href;
@@ -24,7 +24,7 @@ export function TabBar() {
               className={`relative flex-1 sm:flex-none sm:px-6 px-2 py-2.5 text-center text-xs sm:text-sm font-mono uppercase tracking-widest transition-colors rounded-full ${
                 active
                   ? `${tab.color} font-bold shadow-lg`
-                  : "text-neutral-400 hover:text-neutral-100 hover:bg-white/5"
+                  : "text-brand-ink/50 hover:text-brand-ink hover:bg-brand-ink/5"
               }`}
             >
               <span className="hidden sm:inline mr-1.5">{tab.icon}</span>
