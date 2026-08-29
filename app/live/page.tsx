@@ -26,12 +26,12 @@ export default function LivePage() {
 
   return (
     <div className="h-[calc(100vh-49px)] flex flex-col">
-      <div className="border-b border-white/10 bg-brand-maroon px-4 py-3 flex flex-wrap items-center gap-3">
-        <span className="text-xs font-mono uppercase tracking-widest text-white font-bold">
+      <div className="border-b border-white/10 bg-brand-golden-orange px-4 py-3 flex flex-wrap items-center gap-3">
+        <span className="text-xs font-mono uppercase tracking-widest text-brand-ink font-bold">
           📡 Live Tracking
         </span>
         {loading ? (
-          <span className="text-sm text-white/70">Loading events…</span>
+          <span className="text-sm text-brand-ink/70">Loading events…</span>
         ) : (
           <select
             className="bg-brand-ink border border-white/10 rounded-md px-3 py-1.5 text-sm text-neutral-100"

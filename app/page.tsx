@@ -225,19 +225,21 @@ export default function Home() {
           })}
         </svg>
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-brand-ink/70 mb-3">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-maroon animate-pulse" />
-            System Online
+          <div className="max-w-[60%] sm:max-w-none">
+            <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-brand-ink/70 mb-3">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-maroon animate-pulse" />
+              System Online
+            </div>
+            <h1 className="tracking-tight font-[family-name:var(--font-display)] leading-[0.95] text-brand-ink">
+              <span className="text-2xl sm:text-4xl">RALLYSAFE</span>
+              <br />
+              <span className="text-brand-maroon text-4xl sm:text-6xl">PARANOIA</span>
+            </h1>
+            <p className="text-brand-ink/70 mt-3 text-sm sm:text-base max-w-xl font-medium">
+              Track your friends live on stage. Get texted the moment they start, finish, post a
+              time, or go quiet.
+            </p>
           </div>
-          <h1 className="tracking-tight font-[family-name:var(--font-display)] leading-[0.95] text-brand-ink">
-            <span className="text-2xl sm:text-4xl">RALLYSAFE</span>
-            <br />
-            <span className="text-brand-maroon text-4xl sm:text-6xl">PARANOIA</span>
-          </h1>
-          <p className="text-brand-ink/70 mt-3 text-sm sm:text-base max-w-xl font-medium">
-            Track your friends live on stage. Get texted the moment they start, finish, post a
-            time, or go quiet.
-          </p>
         </div>
       </div>
 
@@ -277,13 +279,13 @@ export default function Home() {
 
         {selectedEvent && (
           <>
-            {/* Phone number — same red as "PARANOIA" in the hero title */}
-            <section className="mb-6 rounded-2xl bg-brand-maroon p-5 sm:p-6">
+            {/* Phone number — golden orange */}
+            <section className="mb-6 rounded-2xl bg-brand-golden-orange p-5 sm:p-6">
               <div className="flex items-center gap-3 mb-3">
                 <span className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-ink text-brand-gold font-mono text-sm font-bold shrink-0">
                   02
                 </span>
-                <h2 className="text-base sm:text-lg font-[family-name:var(--font-display)] tracking-tight text-white">
+                <h2 className="text-base sm:text-lg font-[family-name:var(--font-display)] tracking-tight text-brand-ink">
                   Alert Number
                 </h2>
               </div>
@@ -294,7 +296,7 @@ export default function Home() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
-              <p className="text-xs text-white/80 mt-1.5">
+              <p className="text-xs text-brand-ink/80 mt-1.5">
                 Saved to this device — no need to re-enter it next time.
               </p>
             </section>

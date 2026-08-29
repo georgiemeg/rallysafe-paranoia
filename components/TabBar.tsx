@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   { href: "/", label: "Setup", icon: "\u2699\uFE0F", color: "bg-brand-gold text-brand-ink" },
-  { href: "/live", label: "RallySafe Live", icon: "\uD83D\uDCE1", color: "bg-brand-maroon text-white" },
+  { href: "/live", label: "RallySafe Live", icon: "\uD83D\uDCE1", color: "bg-brand-golden-orange text-brand-ink" },
   { href: "/results", label: "Results", icon: "\uD83C\uDFC1", color: "bg-brand-teal text-white" },
 ];
 
