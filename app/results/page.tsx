@@ -216,8 +216,8 @@ export default function ResultsPage() {
                   {overall.stages.filter((s) => s.status === "Completed").length} / {overall.stages.length} stages done
                 </span>
               </div>
-              <div className="rounded-xl border border-white/10 overflow-hidden bg-[#11151c]">
-                <table className="w-full text-sm">
+              <div className="rounded-xl border border-white/10 bg-[#11151c] overflow-x-auto">
+                <table className="w-full min-w-[720px] text-sm">
                   <thead>
                     <tr className="bg-white/[0.04] text-neutral-500 text-xs uppercase tracking-wide font-mono">
                       <th className="text-left px-3 py-2">Pos</th>
