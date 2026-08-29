@@ -49,7 +49,7 @@ export default function LivePage() {
       {selected ? (
         <iframe
           key={selected}
-          src={`https://rc.statusas.com/events/${selected}/map`}
+          src={`https://rc.statusas.com/events/${selected}/details#map`}
           className="flex-1 w-full border-0"
           title="RallySafe Live Map"
         />
