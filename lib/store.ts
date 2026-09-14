@@ -5,9 +5,12 @@ export const redis = Redis.fromEnv();
 
 export interface DeviceProfile {
   deviceId: string;
-  phone: string; // E.164 format, e.g. +13145551234
+  phone: string; // E.164 format, e.g. +131****1234
   createdAt: number;
   updatedAt: number;
+  smsEnabled?: boolean;
+  smsConsentAt?: number; // when the user checked the opt-in box on /text-signup
+  smsConsentIp?: string;
 }
 
 export const ALERT_TYPES = [
@@ -16,6 +19,7 @@ export const ALERT_TYPES = [
   "stageTimes",
   "overallTime",
   "incidentDetection",
+  "serviceEstimates",
 ] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
 
@@ -34,6 +38,20 @@ export interface CarSubscription {
   updatedAt: number;
 }
 
+/** One delivered alert, kept for the in-app inbox (an alternative to SMS for people who'd
+ * rather view alerts inside the app instead of getting texts). Every alert that would be
+ * sent via SMS also gets appended here, per-device, so nothing is missed either way. */
+export interface InboxMessage {
+  id: string;
+  deviceId: string;
+  eventId: number;
+  entryId: number;
+  carNumber: string;
+  alertType: AlertType | "test" | "setup" | "command";
+  body: string;
+  createdAt: number;
+}
+
 export interface LiveTrackState {
   entryId: number;
   eventId: number;
@@ -42,7 +60,10 @@ export interface LiveTrackState {
   speed: number;
   lastMessageTimestamp: string;
   stoppedSinceTs: number | null;
+  stopOriginLat: number | null;
+  stopOriginLng: number | null;
   alertSentForThisStop: boolean;
+  incidentQualifyCount: number;
   lastKnownStageNumber: number; // 0 = not on stage
   lastKnownRacingStatus: number;
 }
@@ -54,6 +75,7 @@ export interface ResultsSentState {
   eventId: number;
   stageTimesSentForStage: number[]; // stage numbers already alerted
   overallSentForStage: number[];
+  serviceSentForStage?: number[];
 }
 
 const k = {
@@ -65,7 +87,18 @@ const k = {
   resultsState: (eventId: number, entryId: number) => `resultsstate:${eventId}:${entryId}`,
   activeEvents: "active-events",
   watchedEntries: (eventId: number) => `watched:${eventId}`,
+  inbox: (deviceId: string) => `inbox:${deviceId}`,
 };
+
+export async function pushInbox(msg: InboxMessage) {
+  await redis.lpush(k.inbox(msg.deviceId), msg);
+  await redis.ltrim(k.inbox(msg.deviceId), 0, 99);
+}
+
+export async function listInbox(deviceId: string): Promise<InboxMessage[]> {
+  const items = await redis.lrange<InboxMessage>(k.inbox(deviceId), 0, 99);
+  return (items ?? []).filter(Boolean);
+}
 
 export async function saveDevice(profile: DeviceProfile) {
   await redis.set(k.device(profile.deviceId), profile);
@@ -86,6 +119,13 @@ export async function findDeviceByPhone(phone: string): Promise<DeviceProfile | 
 
 async function indexPhone(phone: string, deviceId: string) {
   await redis.set(`phone-index:${phone}`, deviceId);
+  await redis.sadd(`phone-devices:${phone}`, deviceId);
+}
+
+export async function deviceIdsForPhone(phone: string): Promise<string[]> {
+  const ids = ((await redis.smembers(`phone-devices:${phone}`)) as string[]) || [];
+  const primary = await redis.get<string>(`phone-index:${phone}`);
+  return Array.from(new Set([...ids, ...(primary ? [primary] : [])]));
 }
 
 /**
@@ -134,6 +174,13 @@ export async function saveSubscriptionsForEvent(
 
   pipeline.sadd(k.activeEvents, String(eventId));
   await pipeline.exec();
+
+  if (cars.length === 0) {
+    for (const oldEntryId of prevEntryIdsThisEvent) {
+      const left = await redis.scard(k.subscribersForEntry(eventId, oldEntryId));
+      if (!left) await redis.srem(k.watchedEntries(eventId), String(oldEntryId));
+    }
+  }
 }
 
 export async function getDeviceSubscriptionsForEvent(
@@ -213,4 +260,54 @@ export async function setResultsSentState(state: ResultsSentState) {
   await redis.set(k.resultsState(state.eventId, state.entryId), state, { ex: 60 * 60 * 24 });
 }
 
+/** First caller wins. Stops duplicate start/finish texts when ticks overlap. */
+export async function claimAlert(key: string): Promise<boolean> {
+  const out = await redis.set(key, "1", { nx: true, ex: 60 * 60 * 24 * 14 });
+  return Boolean(out);
+}
+
+export async function clearAlertClaims(eventId: number) {
+  const needle = `:${eventId}:`;
+  let cursor = 0;
+  do {
+    const res = (await redis.scan(cursor, { count: 200 })) as [string | number, string[]];
+    cursor = Number(res[0]);
+    const batch = res[1] || [];
+    const hit = batch.filter((k) => k.includes(needle) && (k.startsWith("alert:") || k.startsWith("telegram:")));
+    if (hit.length) await redis.del(...hit);
+  } while (cursor !== 0);
+}
+
+export async function clearLiveState(eventId: number) {
+  const prefix = `livestate:${eventId}:`;
+  let cursor = 0;
+  do {
+    const res = (await redis.scan(cursor, { count: 200 })) as [string | number, string[]];
+    cursor = Number(res[0]);
+    const hit = (res[1] || []).filter((key) => key.startsWith(prefix));
+    if (hit.length) await redis.del(...hit);
+  } while (cursor !== 0);
+}
+
+/** Clears the "already sent" dedupe markers for stage times / overall / service alerts.
+ * Without this, restarting the sim leaves stale resultsstate keys behind (e.g. stages 1-4
+ * marked sent from a prior run) and every real alert on a re-run silently gets treated as
+ * a duplicate and dropped — this is why stage/overall alerts stopped firing after a restart
+ * even though start/finish alerts (which don't use this dedupe) kept working. */
+export async function clearResultsSentState(eventId: number) {
+  const prefix = `resultsstate:${eventId}:`;
+  let cursor = 0;
+  do {
+    const res = (await redis.scan(cursor, { count: 200 })) as [string | number, string[]];
+    cursor = Number(res[0]);
+    const hit = (res[1] || []).filter((key) => key.startsWith(prefix));
+    if (hit.length) await redis.del(...hit);
+  } while (cursor !== 0);
+}
+
 export { indexPhone };
+
+export async function watchEntry(eventId: number, entryId: number) {
+  await redis.sadd(k.activeEvents, String(eventId));
+  await redis.sadd(k.watchedEntries(eventId), String(entryId));
+}

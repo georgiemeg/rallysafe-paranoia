@@ -1,4 +1,5 @@
-// Server-side proxy + computation for the Sneak Attack Rally "ARA Combiner" live JSON feed.
+import { rankByFieldDistance } from "./overall-rank";
+import { accumulateOverall } from "./overall-math";
 // Same underlying RallySafe data, pre-aggregated per stage across the whole rally -- used here
 // purely to compute REAL overall live standings, since RallySafe's own results app only shows
 // per-stage times/splits, not a running overall classification.
@@ -105,19 +106,32 @@ async function fetchCombinerSlug(slug: string): Promise<CombinerData | null> {
   const cached = cache.get(slug);
   if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) return cached.data;
 
-  const res = await fetch(`https://sneakattackrally.com/ARACombinerThing/data/live/${slug}.json`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  let data: CombinerData | null = null;
-  try {
-    data = await res.json();
-  } catch {
-    return null;
+  // The Sneak Attack feed occasionally goes momentarily empty/null mid-event (observed:
+  // valid JSON body literally `null` with a 200 status, not an error). A single miss here
+  // used to silently disqualify the whole event from being treated as ARA for the rest of
+  // that page load, which then routed it into the far less trustworthy raw-stage fallback.
+  // One quick retry catches a blip without risking the route's time budget — this function
+  // can be called up to 6x per event across a whole event list, so keep it cheap.
+  let lastData: CombinerData | null = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 200));
+    try {
+      const res = await fetch(`https://sneakattackrally.com/ARACombinerThing/data/live/${slug}.json`, {
+        cache: "no-store",
+      });
+      if (!res.ok) continue;
+      const data = (await res.json()) as CombinerData | null;
+      if (data && data.title) {
+        lastData = data;
+        break;
+      }
+    } catch {
+      // fall through to retry
+    }
   }
-  if (!data || !data.title) return null;
-  cache.set(slug, { data, fetchedAt: Date.now() });
-  return data;
+  if (!lastData) return null;
+  cache.set(slug, { data: lastData, fetchedAt: Date.now() });
+  return lastData;
 }
 
 /** Parses a time string like "17:50.5" or "39.0" (seconds only) into milliseconds.
@@ -179,6 +193,7 @@ export interface OverallStanding {
   driverName: string;
   codriverName: string;
   stagesCompleted: number;
+  stagesTotal?: number;
   totalMs: number;
   gapToLeaderMs: number;
   gapToAheadMs: number;
@@ -187,37 +202,34 @@ export interface OverallStanding {
   /** Net penalty seconds: positive = time added (bad), negative = time reduced on appeal (good).
    * Zero when isPenalized is false. */
   penaltySecondsNet: number;
+  board?: "national" | "regional";
 }
 
-/** Computes running overall totals from every completed-stage time for every entry,
- * sorted ascending by total time. Cars with retirements are pushed to the bottom but
- * still shown (marked isRetired) rather than silently dropped. */
+/** Overall from live combiner: times + penalties; cancelled stages stay numbered but add no time. */
 export async function computeOverallStandings(data: CombinerData): Promise<OverallStanding[]> {
   const uids = await fetchUidTable();
   const rows: OverallStanding[] = [];
+  const stagesTotal = data.stages.length;
 
   for (const entry of data.entries) {
-    // STRYKER Challenge is a separate support series with its own shorter-stage format;
-    // it is NOT part of the main National/Regional overall classification (confirmed against
-    // the source site's own "Single table" view, which excludes it entirely).
-    if (entry.category === "STRYKER Challenge") continue;
-
-    let totalMs = 0;
-    let stagesCompleted = 0;
-    for (const t of entry.times) {
-      const ms = parseTimeToMs(t);
-      if (ms !== null) {
-        totalMs += ms;
-        stagesCompleted++;
-      }
-    }
-    if (stagesCompleted === 0) continue; // hasn't started, skip entirely
+    const timesMs = data.stages.map((_, y) => parseTimeToMs(entry.times[y] ?? ""));
+    const scored = accumulateOverall(
+      data.stages.map((s) => s.status || ""),
+      timesMs
+    );
+    if (!scored) continue;
+    const totalMsBase = scored.totalMs;
+    const lastStage = scored.lastStage;
 
     const penalties = entry.penalties ?? [];
     const penaltySecondsNet = penalties.reduce((sum, p) => {
       const secs = parsePenaltyDurationSeconds(p.time);
       return sum + (isTimeReducedReason(p.reason) ? -secs : secs);
     }, 0);
+
+    const board: "national" | "regional" = /^national$/i.test(entry.category ?? "")
+      ? "national"
+      : "regional";
 
     rows.push({
       position: 0,
@@ -226,30 +238,19 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
       carModel: entry.carModel,
       driverName: nameFor(uids, entry.driverUID),
       codriverName: nameFor(uids, entry.codriverUID),
-      stagesCompleted,
-      totalMs,
+      stagesCompleted: lastStage,
+      stagesTotal,
+      totalMs: totalMsBase + penaltySecondsNet * 1000,
       gapToLeaderMs: 0,
       gapToAheadMs: 0,
       isRetired: (entry.retirements ?? []).length > 0,
       isPenalized: penalties.length > 0,
       penaltySecondsNet,
+      board,
     });
   }
 
-  // Running cars first (by time), retired cars after (also by time, informational only)
-  rows.sort((a, b) => {
-    if (a.isRetired !== b.isRetired) return a.isRetired ? 1 : -1;
-    return a.totalMs - b.totalMs;
-  });
-
-  const leaderMs = rows.find((r) => !r.isRetired)?.totalMs ?? rows[0]?.totalMs ?? 0;
-  let prevMs = leaderMs;
-  rows.forEach((r, i) => {
-    r.position = i + 1;
-    r.gapToLeaderMs = r.totalMs - leaderMs;
-    r.gapToAheadMs = i === 0 ? 0 : r.totalMs - prevMs;
-    prevMs = r.totalMs;
-  });
-
-  return rows;
+  const national = rankByFieldDistance(rows.filter((r) => r.board === "national"));
+  const regional = rankByFieldDistance(rows.filter((r) => r.board === "regional"));
+  return [...national, ...regional];
 }

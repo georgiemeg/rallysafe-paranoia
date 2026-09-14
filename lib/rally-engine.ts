@@ -108,6 +108,10 @@ export async function buildStageTimesMessage(
   sub: CarSubscription,
   liveStageNumber: number
 ): Promise<string | null> {
+  if (sub.eventId === 20251925) {
+    const { simStageTimesAlert } = await import("@/lib/sim/engine");
+    return simStageTimesAlert(sub.carNumber, liveStageNumber);
+  }
   const mappingForFind = await findEntryByCarNumberCached(sub);
   if (!mappingForFind) return null;
   const { resultsEventId, rallyId, resultsEntryId } = mappingForFind;
@@ -132,11 +136,16 @@ export async function buildStageTimesMessage(
   // Re-derive position within scope if class-filtered (results API positions are always overall)
   const myScopedIndex = scopedTimes.findIndex((t) => t.entryId === resultsEntryId);
   const aheadOfMe = myScopedIndex > 0 ? scopedTimes.slice(Math.max(0, myScopedIndex - 3), myScopedIndex) : [];
+  const behindOfMe = myScopedIndex >= 0 ? scopedTimes.slice(myScopedIndex + 1, myScopedIndex + 4) : [];
   const entriesById = new Map(scopedEntries.map((e) => [e.entryId, e]));
 
   const aheadWithEntries: { entry: ResultsEntry; time: StageTime }[] = aheadOfMe
     .slice()
     .reverse() // closest-to-me first
+    .map((t) => ({ entry: entriesById.get(t.entryId)!, time: t }))
+    .filter((x) => x.entry);
+
+  const behindWithEntries: { entry: ResultsEntry; time: StageTime }[] = behindOfMe
     .map((t) => ({ entry: entriesById.get(t.entryId)!, time: t }))
     .filter((x) => x.entry);
 
@@ -160,6 +169,7 @@ export async function buildStageTimesMessage(
     myTime,
     priorPass,
     aheadOfMe: aheadWithEntries,
+    behindMe: behindWithEntries,
   });
 }
 
@@ -167,6 +177,54 @@ export async function buildOverallTimeMessage(
   sub: CarSubscription,
   liveStageNumber: number
 ): Promise<string | null> {
+  if (sub.eventId === 20251925) {
+    const { simOverall, crewForCar } = await import("@/lib/sim/engine");
+    const data = await simOverall(liveStageNumber);
+    const mine = data.standings.find((s) => String(s.number) === sub.carNumber);
+    const stage = data.stages[liveStageNumber - 1];
+    if (!mine || !stage || mine.isRetired || mine.stagesCompleted < 1) return null;
+    const clock = (ms: number) => {
+      const totalSeconds = ms / 1000;
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = (totalSeconds - minutes * 60).toFixed(1);
+      return minutes > 0 ? `${minutes}:${seconds.padStart(4, "0")}` : `${seconds}s`;
+    };
+    const ord = (n: number) => {
+      const s = ["th", "st", "nd", "rd"];
+      const v = n % 100;
+      return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
+    };
+    const last = (name: string) => name.split(" ").slice(-1)[0];
+    const carLabel = sub.carClass ? `#${sub.carNumber} (${sub.carClass})` : `#${sub.carNumber}`;
+    const lines = [
+      `Overall after ${stage.name} — Car ${carLabel} (${sub.driverName}/${sub.codriverName}): ${ord(mine.position)}, ${clock(mine.totalMs)} (+${clock(mine.gapToLeaderMs)} to leader)`,
+    ];
+    const classified = data.standings.filter((s) => !s.isRetired && s.stagesCompleted > 0 && s.totalMs > 0);
+    const myIdx = classified.findIndex((s) => String(s.number) === sub.carNumber);
+    const ahead = myIdx > 0 ? classified.slice(Math.max(0, myIdx - 3), myIdx) : [];
+    const behind = myIdx >= 0 ? classified.slice(myIdx + 1, myIdx + 4) : [];
+    if (ahead.length) {
+      lines.push("Ahead:");
+      for (const a of ahead) {
+        const c = crewForCar(String(a.number));
+        const delta = mine.totalMs - a.totalMs;
+        lines.push(
+          `${ord(a.position)} #${a.number} ${last(c?.driver || a.driverName)}/${last(c?.navigator || a.codriverName)} — ${clock(a.totalMs)} (-${clock(delta)} to you)`
+        );
+      }
+    }
+    if (behind.length) {
+      lines.push("Behind:");
+      for (const b of behind) {
+        const c = crewForCar(String(b.number));
+        const delta = b.totalMs - mine.totalMs;
+        lines.push(
+          `${ord(b.position)} #${b.number} ${last(c?.driver || b.driverName)}/${last(c?.navigator || b.codriverName)} — ${clock(b.totalMs)} (+${clock(delta)} to you)`
+        );
+      }
+    }
+    return lines.join("\n");
+  }
   const mappingForFind = await findEntryByCarNumberCached(sub);
   if (!mappingForFind) return null;
   const { resultsEventId, rallyId, resultsEntryId } = mappingForFind;
@@ -228,6 +286,16 @@ async function findEntryByCarNumberCached(sub: CarSubscription) {
   };
   entryLookupCache.set(cacheKey, result);
   return result;
+}
+
+/** Looks up a human stage name (e.g. "SS4 Steamboat 2") for a real-event subscription,
+ * for use in start/finish alert text. Returns undefined if lookup fails for any reason —
+ * callers fall back to a bare "SS{n}" label. */
+export async function getStageNameForSub(sub: CarSubscription, liveStageNumber: number): Promise<string | undefined> {
+  const mappingForFind = await findEntryByCarNumberCached(sub);
+  if (!mappingForFind) return undefined;
+  const mapping = await getStageMapping(sub.eventId, mappingForFind.rallyId);
+  return mapping?.liveStageNumberToName.get(liveStageNumber);
 }
 
 export { getEventDetails as getResultsEventDetails };

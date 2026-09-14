@@ -21,6 +21,12 @@ export async function GET(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   const { eventId } = await params;
+  if (eventId === "TEST_OTR_2025" || eventId === "20251925") {
+    const { canSeeTestEvent } = await import("@/lib/dev-auth");
+    if (!(await canSeeTestEvent())) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const { simOverall } = await import("@/lib/sim/engine");
+    return NextResponse.json(await simOverall());
+  }
   const id = Number(eventId);
   if (!Number.isFinite(id)) {
     return NextResponse.json({ error: "Invalid eventId" }, { status: 400 });
@@ -61,6 +67,8 @@ export async function GET(
       serviceIn: [], // this feed doesn't expose service predictions — ARA combiner does
       timeZone: "",
       stagesCompleted,
+      source: "fallback",
+      hasAnyIncompleteData: standings.some((s) => s.hasIncompleteData),
     });
   } catch (err) {
     console.error(err);

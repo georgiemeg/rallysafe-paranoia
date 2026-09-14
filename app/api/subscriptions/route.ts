@@ -8,7 +8,7 @@ import {
   type AlertType,
   type CarSubscription,
 } from "@/lib/store";
-import { sendSms } from "@/lib/sms";
+import { deliverAlert } from "@/lib/deliver";
 
 export const dynamic = "force-dynamic";
 
@@ -33,11 +33,12 @@ interface CarInput {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { deviceId, phone, eventId, cars } = body as {
+  const { deviceId, phone, eventId, cars, smsConsent } = body as {
     deviceId?: string;
     phone?: string;
     eventId?: number;
     cars?: CarInput[];
+    smsConsent?: boolean;
   };
 
   if (!deviceId || typeof deviceId !== "string") {
@@ -57,11 +58,24 @@ export async function POST(req: NextRequest) {
   const now = Date.now();
   const existingDevice = await getDevice(deviceId);
   const isNewPhone = existingDevice?.phone !== normalized;
+
+  // Twilio requires explicit, logged opt-in before the first SMS is ever sent to a number.
+  // Once a device has consented we don't re-ask on every save — only the very first time
+  // this deviceId is about to get real texts.
+  const alreadyConsented = Boolean(existingDevice?.smsConsentAt);
+  if (!alreadyConsented && smsConsent !== true) {
+    return NextResponse.json({ error: "SMS consent is required before texts can be sent.", needsConsent: true }, { status: 400 });
+  }
+
+  const forwardedFor = req.headers.get("x-forwarded-for");
   await saveDevice({
     deviceId,
     phone: normalized,
     createdAt: existingDevice?.createdAt ?? now,
     updatedAt: now,
+    smsEnabled: existingDevice?.smsEnabled ?? true,
+    smsConsentAt: existingDevice?.smsConsentAt ?? now,
+    smsConsentIp: existingDevice?.smsConsentIp ?? (forwardedFor ? forwardedFor.split(",")[0].trim() : undefined),
   });
 
   const fullAlerts = (partial: Partial<Record<AlertType, boolean>>): Record<AlertType, boolean> => {
@@ -84,6 +98,13 @@ export async function POST(req: NextRequest) {
   );
 
   await saveSubscriptionsForEvent(deviceId, eventId, carSubs);
+  if (carSubs.length === 0) {
+    const { deviceIdsForPhone } = await import("@/lib/store");
+    const others = await deviceIdsForPhone(normalized);
+    for (const id of others) {
+      if (id !== deviceId) await saveSubscriptionsForEvent(id, eventId, []);
+    }
+  }
 
   // Confirmation text: prompts the user to save the alert number as a contact so future
   // texts don't land as "unknown sender", and doubles as proof the number/setup works.
@@ -96,8 +117,14 @@ export async function POST(req: NextRequest) {
     const savePrompt =
       `RallySafe Paranoia is set up! Now tracking: ${carList}.\n\n` +
       `Save this number to your contacts so alerts don't get missed — text HELP anytime for commands.`;
-    await sendSms(normalized, savePrompt);
-    confirmationSmsSent = true;
+    const delivered = await deliverAlert({
+      deviceId,
+      phone: normalized,
+      eventId,
+      alertType: "setup",
+      body: savePrompt,
+    });
+    confirmationSmsSent = delivered.sms;
   } catch (err) {
     confirmationSmsError = err instanceof Error ? err.message : "Unknown SMS error";
     console.error("Confirmation SMS failed:", err);

@@ -1,0 +1,73 @@
+[
+  { "n": 1, "name": "SS1 Founders Super Special 1", "km": 5.93, "day": 1, "cancelled": false, "firstCarDue": "19:13", "hotMin": 6, "transitAfterMin": 48, "after": [
+    { "kind": "transit", "min": 3, "from": "SS1", "to": "Service A PIR" },
+    { "kind": "service", "min": 35, "name": "Service A PIR", "from": "SS1", "to": "Service A PIR" },
+    { "kind": "transit", "min": 10, "from": "Service A PIR", "to": "SS2" }
+  ] },
+  { "n": 2, "name": "SS2 Founders Super Special 2", "km": 5.93, "day": 1, "cancelled": false, "firstCarDue": "20:07", "hotMin": 6, "transitAfterMin": 6, "after": [
+    { "kind": "transit", "min": 6, "from": "SS2", "to": "MTC IN PIR" },
+    { "kind": "overnight", "min": 809, "name": "Parc fermé overnight (Fri)", "from": "MTC IN PIR", "to": "SS3" }
+  ] },
+  { "n": 3, "name": "SS3 Dalles Mtn Up 1", "km": 16.01, "day": 2, "cancelled": false, "firstCarDue": "09:48", "hotMin": 13, "transitAfterMin": 36, "after": [
+    { "kind": "transit", "min": 36, "from": "SS3", "to": "SS4" }
+  ] },
+  { "n": 4, "name": "SS4 Andy's Run 1", "km": 10.84, "day": 2, "cancelled": false, "firstCarDue": "10:37", "hotMin": 13, "transitAfterMin": 103, "after": [
+    { "kind": "regroup", "min": 15, "name": "Regroup Goldendale", "from": "SS4", "to": "Service B" },
+    { "kind": "service", "min": 30, "name": "Service B Goldendale HS", "from": "Regroup", "to": "Service B" },
+    { "kind": "transit", "min": 26, "from": "Service B", "to": "SS5" }
+  ] },
+  { "n": 5, "name": "SS5 Oak Flat Reverse 1", "km": 8.99, "day": 2, "cancelled": false, "firstCarDue": "12:33", "hotMin": 9, "transitAfterMin": 39, "after": [
+    { "kind": "transit", "min": 39, "from": "SS5", "to": "SS6" }
+  ] },
+  { "n": 6, "name": "SS6 Maryhill 1", "km": 3.96, "day": 2, "cancelled": false, "firstCarDue": "13:21", "hotMin": 5, "transitAfterMin": 115, "after": [
+    { "kind": "regroup", "min": 15, "name": "Regroup Goldendale", "from": "SS6", "to": "Service C" },
+    { "kind": "service", "min": 30, "name": "Service C Goldendale HS", "from": "Regroup", "to": "Service C" },
+    { "kind": "transit", "min": 45, "from": "Service C", "to": "SS7" }
+  ] },
+  { "n": 7, "name": "SS7 Dalles Mtn Up 2", "km": 16.01, "day": 2, "cancelled": false, "firstCarDue": "15:21", "hotMin": 13, "transitAfterMin": 36, "after": [
+    { "kind": "transit", "min": 36, "from": "SS7", "to": "SS8" }
+  ] },
+  { "n": 8, "name": "SS8 Andy's Run 2", "km": 10.84, "day": 2, "cancelled": false, "firstCarDue": "16:10", "hotMin": 13, "transitAfterMin": 103, "after": [
+    { "kind": "regroup", "min": 15, "name": "Regroup Goldendale", "from": "SS8", "to": "Service D" },
+    { "kind": "service", "min": 30, "name": "Service D Goldendale HS", "from": "Regroup", "to": "Service D" },
+    { "kind": "transit", "min": 26, "from": "Service D", "to": "SS9" }
+  ] },
+  { "n": 9, "name": "SS9 Oak Flat Reverse 2", "km": 8.99, "day": 2, "cancelled": false, "firstCarDue": "18:06", "hotMin": 9, "transitAfterMin": 39, "after": [
+    { "kind": "transit", "min": 39, "from": "SS9", "to": "SS10" }
+  ] },
+  { "n": 10, "name": "SS10 Maryhill 2", "km": 3.96, "day": 2, "cancelled": false, "firstCarDue": "18:54", "hotMin": 5, "transitAfterMin": 22, "after": [
+    { "kind": "transit", "min": 22, "from": "SS10", "to": "MTC IN Goldendale" },
+    { "kind": "overnight", "min": 855, "name": "Parc fermé overnight (Sat)", "from": "MTC IN Goldendale", "to": "SS11" }
+  ] },
+  { "n": 11, "name": "SS11 Boyd Loop Very Short 1", "km": 8.96, "day": 3, "cancelled": false, "firstCarDue": "09:31", "hotMin": 9, "transitAfterMin": 28, "after": [
+    { "kind": "transit", "min": 28, "from": "SS11", "to": "SS12" }
+  ] },
+  { "n": 12, "name": "SS12 Shadowbuck 1", "km": 7.39, "day": 3, "cancelled": false, "firstCarDue": "10:08", "hotMin": 8, "transitAfterMin": 19, "after": [
+    { "kind": "transit", "min": 19, "from": "SS12", "to": "SS13" }
+  ] },
+  { "n": 13, "name": "SS13 Nagle's Revenge 1", "km": 7.77, "day": 3, "cancelled": false, "firstCarDue": "10:35", "hotMin": 8, "transitAfterMin": 45, "after": [
+    { "kind": "transit", "min": 45, "from": "SS13", "to": "SS14" }
+  ] },
+  { "n": 14, "name": "SS14 Starveout 1", "km": 12.83, "day": 3, "cancelled": false, "firstCarDue": "11:28", "hotMin": 12, "transitAfterMin": 121, "after": [
+    { "kind": "regroup", "min": 15, "name": "Regroup Dufur", "from": "SS14", "to": "Service E" },
+    { "kind": "service", "min": 40, "name": "Service E Dufur", "from": "Regroup", "to": "Service E" },
+    { "kind": "transit", "min": 41, "from": "Service E", "to": "SS15" }
+  ] },
+  { "n": 15, "name": "SS15 Boyd Loop Very Short 2", "km": 8.96, "day": 3, "cancelled": false, "firstCarDue": "13:41", "hotMin": 9, "transitAfterMin": 28, "after": [
+    { "kind": "transit", "min": 28, "from": "SS15", "to": "SS16" }
+  ] },
+  { "n": 16, "name": "SS16 Shadowbuck 2", "km": 7.39, "day": 3, "cancelled": false, "firstCarDue": "14:18", "hotMin": 8, "transitAfterMin": 19, "after": [
+    { "kind": "transit", "min": 19, "from": "SS16", "to": "SS17" }
+  ] },
+  { "n": 17, "name": "SS17 Nagle's Revenge 2", "km": 7.77, "day": 3, "cancelled": false, "firstCarDue": "14:45", "hotMin": 8, "transitAfterMin": 45, "after": [
+    { "kind": "transit", "min": 45, "from": "SS17", "to": "SS18" }
+  ] },
+  { "n": 18, "name": "SS18 Starveout 2", "km": 12.83, "day": 3, "cancelled": false, "firstCarDue": "15:38", "hotMin": 12, "transitAfterMin": 111, "after": [
+    { "kind": "regroup", "min": 20, "name": "Regroup Dufur", "from": "SS18", "to": "Service F" },
+    { "kind": "service", "min": 30, "name": "Service F Dufur", "from": "Regroup", "to": "Service F" },
+    { "kind": "transit", "min": 36, "from": "Service F", "to": "SS19" }
+  ] },
+  { "n": 19, "name": "SS19 Nagle's Revenge 3", "km": 7.77, "day": 3, "cancelled": false, "firstCarDue": "17:41", "hotMin": 8, "transitAfterMin": 45, "after": [
+    { "kind": "transit", "min": 45, "from": "SS19", "to": "Finish MTC" }
+  ] }
+]

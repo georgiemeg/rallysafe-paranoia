@@ -1,21 +1,78 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * Small circular "i" info icon. Hovering (desktop) or tapping (mobile, since hover doesn't
- * exist there) reveals a floating tooltip with an explanation. Built per Helen's eval
- * feedback: "every feature has to have an explanation... I think scroll-over is easier
- * because it doesn't require [navigating to] another page and reduces misclicking."
+ * Pointed bubble anchored to the ⓘ. Hover on fine pointers; tap to toggle on
+ * touch. Flips if it would overflow the viewport. Never window.alert / toast.
  */
 export function InfoTooltip({ text, className = "" }: { text: string; className?: string }) {
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  const bubbleRef = useRef<HTMLSpanElement>(null);
+  const leaveTimer = useRef<number | null>(null);
+
+  const cancelLeave = () => {
+    if (leaveTimer.current) window.clearTimeout(leaveTimer.current);
+    leaveTimer.current = null;
+  };
+
+  const scheduleLeave = () => {
+    cancelLeave();
+    leaveTimer.current = window.setTimeout(() => setOpen(false), 150);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const btn = wrapRef.current;
+    const bubble = bubbleRef.current;
+    if (!btn || !bubble) return;
+    const br = btn.getBoundingClientRect();
+    const bw = Math.min(260, window.innerWidth - 16);
+    let left = br.left + br.width / 2 - bw / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - bw - 8));
+    const spaceBelow = window.innerHeight - br.bottom;
+    const placeAbove = spaceBelow < 120 && br.top > spaceBelow;
+    bubble.style.width = `${bw}px`;
+    bubble.style.left = `${left}px`;
+    if (placeAbove) {
+      bubble.style.top = "auto";
+      bubble.style.bottom = `${window.innerHeight - br.top + 8}px`;
+      bubble.dataset.side = "above";
+    } else {
+      bubble.style.bottom = "auto";
+      bubble.style.top = `${br.bottom + 8}px`;
+      bubble.dataset.side = "below";
+    }
+    const caretX = br.left + br.width / 2 - left;
+    bubble.style.setProperty("--caret-x", `${caretX}px`);
+  }, [open, text]);
 
   return (
     <span
+      ref={wrapRef}
       className={`relative inline-flex ${className}`}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => {
+        cancelLeave();
+        setOpen(true);
+      }}
+      onMouseLeave={scheduleLeave}
     >
       <button
         type="button"
@@ -25,17 +82,18 @@ export function InfoTooltip({ text, className = "" }: { text: string; className?
           e.stopPropagation();
           setOpen((v) => !v);
         }}
+        onFocus={() => setOpen(true)}
         className="flex items-center justify-center w-4 h-4 rounded-full border border-current text-[10px] leading-none opacity-60 hover:opacity-100 transition-opacity shrink-0"
       >
         i
       </button>
       {open && (
         <span
+          ref={bubbleRef}
           role="tooltip"
-          className="absolute z-50 left-1/2 -translate-x-1/2 bottom-[130%] w-56 rounded-lg bg-brand-ink border border-white/15 text-neutral-200 text-xs leading-snug px-3 py-2 shadow-xl shadow-black/50 pointer-events-none"
+          className="info-tip-bubble fixed z-[80] rounded-lg bg-brand-ink border border-white/15 text-neutral-200 text-xs leading-snug px-3 py-2 shadow-xl shadow-black/50"
         >
           {text}
-          <span className="absolute left-1/2 -translate-x-1/2 top-full w-2 h-2 bg-brand-ink border-r border-b border-white/15 rotate-45 -mt-1" />
         </span>
       )}
     </span>

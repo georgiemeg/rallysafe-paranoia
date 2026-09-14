@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEntries, getResultsEventId } from "@/lib/rallysafe";
 import { getEventDetails as getResultsEventDetails, getRallyEntries } from "@/lib/rallysafe-results";
+import { isTestEventId } from "@/lib/sim/ids";
+import { canSeeTestEvent } from "@/lib/dev-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +36,22 @@ export async function GET(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   const { eventId } = await params;
+  if (isTestEventId(eventId)) {
+    if (!(await canSeeTestEvent())) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    const { getSimState, simEntries } = await import("@/lib/sim/engine");
+    const raw = simEntries(await getSimState());
+    const slim = raw.map((e) => ({
+      entryId: e.entryId,
+      identifier: e.identifier,
+      carClass: e.classText ?? "",
+      driver: e.vehicle?.driver ? `${e.vehicle.driver.firstName} ${e.vehicle.driver.surname}` : "Unknown",
+      navigator: e.vehicle?.navigator ? `${e.vehicle.navigator.firstName} ${e.vehicle.navigator.surname}` : null,
+      carModelYear: e.vehicle?.make ?? "",
+    }));
+    return NextResponse.json({ entries: slim });
+  }
   const id = Number(eventId);
   if (!Number.isFinite(id)) {
     return NextResponse.json({ error: "Invalid eventId" }, { status: 400 });

@@ -3,6 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-ink: #0d1b1e;
+  --brand-gold: #d5a021;
+  --brand-teal: #00798c;
+  --brand-orange: #f34213;
+  --brand-golden-orange: #725ac1;
+  --brand-maroon: #960200;
+  --brand-canvas: #f5dfbb;
+  --brand-on-gold: #0d1b1e;
+  --brand-on-teal: #ffffff;
+  --brand-on-orange: #ffffff;
+  --brand-on-purple: #ffffff;
+  --brand-on-maroon: #ffffff;
 }
 
 @theme inline {
@@ -10,15 +22,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
-  /* Brand palette (Alex's design) — replaces the emerald mission-control accent */
-  --color-brand-ink: #0d1b1e;
-  --color-brand-gold: #d5a021;
-  --color-brand-teal: #00798c;
-  --color-brand-orange: #f34213;
-  --color-brand-golden-orange: #725ac1;
-  --color-brand-maroon: #960200;
-  --color-canvas: #f5dfbb;
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-gold: var(--brand-gold);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-golden-orange: var(--brand-golden-orange);
+  --color-brand-maroon: var(--brand-maroon);
+  --color-canvas: var(--brand-canvas);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,6 +42,35 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100dvh;
+  overflow-y: auto;
+}
+
+html {
+  overflow-y: auto;
+}
+
+.info-tip-bubble {
+  pointer-events: none;
+}
+.info-tip-bubble::after {
+  content: "";
+  position: absolute;
+  left: var(--caret-x, 50%);
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  background: var(--brand-ink);
+  border-right: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  transform: rotate(45deg);
+}
+.info-tip-bubble[data-side="below"]::after {
+  top: -5px;
+}
+.info-tip-bubble[data-side="above"]::after {
+  bottom: -5px;
+  transform: rotate(225deg);
 }
 
 /* Save & Start Tracking button — lifts on hover with a strong bouncing shadow.
@@ -97,8 +136,8 @@ body {
     45deg,
     #0a0a0a 0px,
     #0a0a0a 22px,
-    #d5a021 22px,
-    #d5a021 44px
+    var(--brand-gold) 22px,
+    var(--brand-gold) 44px
   );
   background-size: 62.23px 62.23px;
   clip-path: inset(100% 0 0 0);
@@ -127,17 +166,17 @@ body {
    relative to the element's own box, so this works identically everywhere. */
 .selected-row-tape > td {
   background-image:
-    repeating-linear-gradient(45deg, #0a0a0a 0px, #0a0a0a 5px, #d5a021 5px, #d5a021 10px),
-    repeating-linear-gradient(45deg, #0a0a0a 0px, #0a0a0a 5px, #d5a021 5px, #d5a021 10px);
+    repeating-linear-gradient(45deg, #0a0a0a 0px, #0a0a0a 5px, var(--brand-gold) 5px, var(--brand-gold) 10px),
+    repeating-linear-gradient(45deg, #0a0a0a 0px, #0a0a0a 5px, var(--brand-gold) 5px, var(--brand-gold) 10px);
   background-size: 14.14px 3px, 14.14px 3px;
   background-position: top left, bottom left;
   background-repeat: repeat-x, repeat-x;
 }
 .selected-row-tape > td:first-child {
-  border-left: 3px solid #d5a021;
+  border-left: 3px solid var(--brand-gold);
 }
 .selected-row-tape > td:last-child {
-  border-right: 3px solid #d5a021;
+  border-right: 3px solid var(--brand-gold);
 }
 
 /* ARA-only feature toast — appears then auto-dismisses. */
@@ -160,4 +199,12 @@ body {
 .ara-toast {
   animation: ara-toast-in-out 3s ease forwards;
 }
+
+.bg-brand-gold { color: var(--brand-on-gold) !important; }
+.bg-brand-teal { color: var(--brand-on-teal) !important; }
+.bg-brand-orange { color: var(--brand-on-orange) !important; }
+.bg-brand-golden-orange { color: var(--brand-on-purple) !important; }
+.bg-brand-maroon { color: var(--brand-on-maroon) !important; }
+.bg-brand-ink { color: #ffffff !important; }
+
 

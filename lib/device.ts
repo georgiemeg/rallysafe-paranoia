@@ -1,5 +1,6 @@
 const DEVICE_ID_KEY = "rallysafe-paranoia:deviceId";
 const PHONE_KEY = "rallysafe-paranoia:phone";
+const SMS_CONSENT_KEY = "rallysafe-paranoia:smsConsented";
 
 function uuid(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -31,4 +32,17 @@ export function getSavedPhone(): string {
 export function savePhoneLocally(phone: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem(PHONE_KEY, phone);
+}
+
+/** Whether this browser has already completed the SMS opt-in checkbox once. We only need to
+ * ask once per device — re-asking on every Save would be annoying and isn't required once
+ * consent has actually been recorded server-side. */
+export function hasSmsConsent(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(SMS_CONSENT_KEY) === "1";
+}
+
+export function saveSmsConsentLocally() {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SMS_CONSENT_KEY, "1");
 }

@@ -8,6 +8,11 @@ export async function GET(
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   const { eventId } = await params;
+  if (eventId === "TEST_OTR_2025" || eventId === "20251925") {
+    const { canSeeTestEvent } = await import("@/lib/dev-auth");
+    if (!(await canSeeTestEvent())) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ resultsEventId: 20251925 });
+  }
   const id = Number(eventId);
   if (!Number.isFinite(id)) {
     return NextResponse.json({ error: "Invalid eventId" }, { status: 400 });

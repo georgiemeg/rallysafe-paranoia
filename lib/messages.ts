@@ -7,12 +7,14 @@ function fmtCarLabel(sub: Pick<CarSubscription, "carNumber" | "carClass">): stri
   return sub.carClass ? `#${sub.carNumber} (${sub.carClass})` : `#${sub.carNumber}`;
 }
 
-export function stageStartMessage(sub: CarSubscription): string {
-  return `${sub.driverName} & ${sub.codriverName} in car ${fmtCarLabel(sub)} on stage!`;
+export function stageStartMessage(sub: CarSubscription, stageNumber: number, stageName?: string): string {
+  const label = stageName || (stageNumber ? `SS${stageNumber}` : "");
+  return `${sub.driverName} & ${sub.codriverName} in car ${fmtCarLabel(sub)} on stage${label ? ` (${label})` : ""}!`;
 }
 
-export function stageFinishMessage(sub: CarSubscription): string {
-  return `${sub.driverName} & ${sub.codriverName} in car ${fmtCarLabel(sub)} stage complete! *phew*`;
+export function stageFinishMessage(sub: CarSubscription, stageNumber: number, stageName?: string): string {
+  const label = stageName || (stageNumber ? `SS${stageNumber}` : "");
+  return `${sub.driverName} & ${sub.codriverName} in car ${fmtCarLabel(sub)} ${label ? `${label} ` : ""}stage complete! *phew*`;
 }
 
 function msToClock(ms: number): string {
@@ -34,6 +36,7 @@ export interface StageTimesContext {
   myTime: StageTime;
   priorPass?: { stageName: string; time: StageTime } | null; // e.g. SS2 Steamboat for SS4
   aheadOfMe: { entry: ResultsEntry; time: StageTime }[]; // up to 3, closest first
+  behindMe: { entry: ResultsEntry; time: StageTime }[]; // up to 3, closest first
 }
 
 export function stageTimesMessage(ctx: StageTimesContext): string {
@@ -51,14 +54,26 @@ export function stageTimesMessage(ctx: StageTimesContext): string {
     lines.push(`↳ ${diffLabel(delta)} this time`);
   }
 
+  const ssTag = ctx.stageName.match(/^SS\d+/i)?.[0] ?? ctx.stageName;
+
   if (ctx.aheadOfMe.length > 0) {
     lines.push("");
-    const ssTag = ctx.stageName.match(/^SS\d+/i)?.[0] ?? ctx.stageName;
     lines.push(`Cars ahead of ${carLabel} on ${ssTag}:`);
     for (const { entry, time } of ctx.aheadOfMe) {
       const deltaToMe = ctx.myTime.elapsedDurationMs - time.elapsedDurationMs;
       lines.push(
         `#${entry.identifier} ${entry.driver.fullName}/${entry.codriver.fullName}: ${msToClock(time.elapsedDurationMs)} (${diffLabel(-deltaToMe).replace(" this time", "")})`
+      );
+    }
+  }
+
+  if (ctx.behindMe.length > 0) {
+    lines.push("");
+    lines.push(`Cars behind ${carLabel} on ${ssTag}:`);
+    for (const { entry, time } of ctx.behindMe) {
+      const deltaToMe = time.elapsedDurationMs - ctx.myTime.elapsedDurationMs;
+      lines.push(
+        `#${entry.identifier} ${entry.driver.fullName}/${entry.codriver.fullName}: ${msToClock(time.elapsedDurationMs)} (${diffLabel(deltaToMe).replace(" this time", "")})`
       );
     }
   }
@@ -134,30 +149,36 @@ export function incidentMessage(sub: CarSubscription, minutesStopped: number, ma
 
 export interface ServiceEstimateEntry {
   serviceNumber: number;
-  due: string; // ISO-ish local timestamp, e.g. "2026-08-29T13:35:00.000Z" (already local time — see combiner.ts note)
+  due: string; // ISO-ish local timestamp
+  durationMins?: number;
 }
 
-/** Service Estimates alert — ARA events only, sourced from the same predicted service-in
- * times shown on the Results page. Formats every upcoming service point for this car. */
+function clockFromIso(due: string, addMins = 0): string | null {
+  const m = due.match(/T(\d{2}):(\d{2})/);
+  if (!m) return null;
+  let h = Number(m[1]);
+  let min = Number(m[2]) + addMins;
+  h += Math.floor(min / 60);
+  min = ((min % 60) + 60) % 60;
+  h = ((h % 24) + 24) % 24;
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(min).padStart(2, "0")} ${ampm}`;
+}
+
+/** Service Estimates alert — ARA events only. In and out, matching the example messages spec. */
 export function serviceEstimatesMessage(sub: CarSubscription, estimates: ServiceEstimateEntry[]): string {
   const carLabel = fmtCarLabel(sub);
   const lines: string[] = [];
   lines.push(`Service Estimates — Car ${carLabel} (${sub.driverName}/${sub.codriverName}):`);
-  lines.push("");
   if (estimates.length === 0) {
     lines.push("No predicted service times available yet.");
   } else {
     for (const s of estimates.sort((a, b) => a.serviceNumber - b.serviceNumber)) {
-      const m = s.due.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-      let label = s.due;
-      if (m) {
-        const [, , , , hour, minute] = m;
-        const h = Number(hour);
-        const ampm = h >= 12 ? "PM" : "AM";
-        const h12 = h % 12 === 0 ? 12 : h % 12;
-        label = `${h12}:${minute} ${ampm}`;
-      }
-      lines.push(`Service ${s.serviceNumber}: ~${label}`);
+      const mins = s.durationMins && s.durationMins > 0 ? s.durationMins : 20;
+      const inLabel = clockFromIso(s.due) ?? s.due;
+      const outLabel = clockFromIso(s.due, mins) ?? inLabel;
+      lines.push(`Service ${s.serviceNumber}: ~${inLabel} - out at ${outLabel}`);
     }
   }
   return lines.join("\n");
@@ -174,6 +195,7 @@ export const HELP_MESSAGE = [
   "HELP — show this message",
   "OVERALL TIME CHECK — get current overall standings for all tracked cars",
   "STAGE TIME CHECK — get latest stage time for all tracked cars",
+  "SERVICE CHECK — get upcoming service in/out estimates for all tracked cars",
   "CAR <number> CLASS ONLY — switch that car's comparisons to only show competitors in its class",
   "CAR <number> ALL CLASSES — switch back to comparing against all classes",
   "",

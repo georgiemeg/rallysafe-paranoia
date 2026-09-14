@@ -117,6 +117,10 @@ export async function listEvents(params?: {
 
 /** Full entry list (car #, driver, co-driver, live lat/lng/speed) for an event. */
 export async function getEntries(eventId: number): Promise<RSEntry[]> {
+  if (eventId === 20251925) {
+    const { getSimState, simEntries } = await import("@/lib/sim/engine");
+    return simEntries(await getSimState());
+  }
   return rsFetch<RSEntry[]>(
     `/entry/table?search=&order=&eventId=${eventId}&classes=`
   );
@@ -139,6 +143,10 @@ export interface RSStage {
 
 /** Human-readable stage list (SS1 Crossroads etc) with mile length and completion status. */
 export async function listStages(eventId: number): Promise<RSStage[]> {
+  if (eventId === 20251925) {
+    const { simStages } = await import("@/lib/sim/engine");
+    return simStages();
+  }
   return rsFetch<RSStage[]>(`/itinerary/stages?eventId=${eventId}&includePolyline=false`);
 }
 
@@ -148,6 +156,7 @@ export async function listStages(eventId: number): Promise<RSStage[]> {
  * "https://results.statusas.com/events/625/stagetimes" -> 625.
  */
 export async function getResultsEventId(eventId: number): Promise<number | null> {
+  if (eventId === 20251925) return 20251925;
   const details = await getEventDetails(eventId);
   const url = (details as { resultsUrl?: string }).resultsUrl;
   if (!url) return null;
