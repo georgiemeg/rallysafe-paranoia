@@ -154,6 +154,7 @@ export function HomeMobile() {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
   const [search, setSearch] = useState("");
   const [testing, setTesting] = useState(false);
   const [testMessage, setTestMessage] = useState("");
@@ -342,12 +343,8 @@ export function HomeMobile() {
     });
   }, []);
 
-  const handleSave = async () => {
+  const performSave = async () => {
     if (!selectedEvent) return;
-    if (!phone.trim()) {
-      setSaveMessage("Enter a phone number first.");
-      return;
-    }
     setSaving(true);
     setSaveMessage("");
     try {
@@ -407,6 +404,19 @@ export function HomeMobile() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (!selectedEvent) return;
+    if (!phone.trim()) {
+      setSaveMessage("Enter a phone number first.");
+      return;
+    }
+    if (!hasSmsConsent()) {
+      setShowConsent(true);
+      return;
+    }
+    await performSave();
   };
 
   const handleTestText = async () => {
@@ -861,6 +871,15 @@ export function HomeMobile() {
           </>
         )}
       </div>
+
+      {showConsent && (
+        <SmsConsentModal
+          phone={phone}
+          busy={saving}
+          onConfirm={() => { saveSmsConsentLocally(); setShowConsent(false); performSave(); }}
+          onCancel={() => setShowConsent(false)}
+        />
+      )}
 
       {showConfirmPopup && (
         <div

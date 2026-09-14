@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getDeviceId, getSavedPhone, savePhoneLocally } from "@/lib/device";
+import { getDeviceId, getSavedPhone, savePhoneLocally, hasSmsConsent, saveSmsConsentLocally } from "@/lib/device";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import { HeroBanner } from "@/components/home/HeroBanner";
+import { SmsConsentModal } from "@/components/home/SmsConsentModal";
 
 interface InboxMsg {
   id: string;
@@ -153,6 +154,7 @@ export function HomeDesktop() {
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
   const [search, setSearch] = useState("");
   const [testing, setTesting] = useState(false);
   const [testMessage, setTestMessage] = useState("");
@@ -321,12 +323,8 @@ export function HomeDesktop() {
     });
   }, []);
 
-  const handleSave = async () => {
+  const performSave = async () => {
     if (!selectedEvent) return;
-    if (!phone.trim()) {
-      setSaveMessage("Enter a phone number first.");
-      return;
-    }
     setSaving(true);
     setSaveMessage("");
     try {
@@ -386,6 +384,20 @@ export function HomeDesktop() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSave = async () => {
+    if (!selectedEvent) return;
+    if (!phone.trim()) {
+      setSaveMessage("Enter a phone number first.");
+      return;
+    }
+    // Twilio/A2P requires explicit opt-in before the first text goes out.
+    if (!hasSmsConsent()) {
+      setShowConsent(true);
+      return;
+    }
+    await performSave();
   };
 
   const handleTestText = async () => {
@@ -827,6 +839,15 @@ export function HomeDesktop() {
           </>
         )}
       </div>
+
+      {showConsent && (
+        <SmsConsentModal
+          phone={phone}
+          busy={saving}
+          onConfirm={() => { saveSmsConsentLocally(); setShowConsent(false); performSave(); }}
+          onCancel={() => setShowConsent(false)}
+        />
+      )}
 
       {showConfirmPopup && (
         <div
