@@ -334,6 +334,7 @@ export function HomeDesktop() {
         body: JSON.stringify({
           deviceId,
           phone,
+          smsConsent: true,
           eventId: selectedEvent.eventId,
           cars: Array.from(tracked.values()).map((c) => ({
             entryId: c.entryId,
@@ -348,7 +349,12 @@ export function HomeDesktop() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setSaveMessage(data.error ?? "Failed to save.");
+        if (data.needsConsent) {
+          setShowConsent(true);
+          setSaveMessage("");
+        } else {
+          setSaveMessage(data.error ?? "Failed to save.");
+        }
       } else {
         savePhoneLocally(data.phone);
         setPhone(data.phone);
