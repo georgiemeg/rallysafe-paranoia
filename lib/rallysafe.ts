@@ -71,6 +71,15 @@ export interface RSEntry {
   isUnitActive: boolean;
   stageNumber: number;
   racingStatus: number;
+  // Additional RallySafe unit telemetry (present on rc.statusas.com /entry/table):
+  safetyStatus?: number; // 0 none, 1 OK, 2 hazard, 3 SOS — the unit's own safety flag
+  gpsStatus?: number; // GPS fix quality (0 = no fix)
+  distance?: number; // cumulative odometer distance
+  competitionStatus?: number;
+  batteryVoltage?: number;
+  electricalStatus?: number;
+  lastGsmMessageTimestamp?: string;
+  lastSatMessageTimestamp?: string;
   [key: string]: unknown;
 }
 

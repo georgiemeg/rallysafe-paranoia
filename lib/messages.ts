@@ -147,6 +147,21 @@ export function incidentMessage(sub: CarSubscription, minutesStopped: number, ma
   );
 }
 
+/** Incident message driven by the RallySafe unit's own safety flag (safetyStatus).
+ * 0 = none, 1 = OK, 2 = hazard, 3 = SOS — verify the numeric mapping live. */
+export function safetyStatusMessage(sub: CarSubscription, safetyStatus: number): string {
+  const state =
+    safetyStatus >= 3
+      ? "SOS — crew needs immediate assistance"
+      : safetyStatus === 2
+        ? "Hazard — vehicle stopped, may be blocking the road"
+        : `Safety system active (status ${safetyStatus})`;
+  return (
+    `RallySafe Paranoia alert:\n` +
+    `Car ${fmtCarLabel(sub)} (${sub.driverName}/${sub.codriverName}): ${state}.`
+  );
+}
+
 export interface ServiceEstimateEntry {
   serviceNumber: number;
   due: string; // ISO-ish local timestamp

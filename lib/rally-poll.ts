@@ -13,7 +13,7 @@ import {
   type CarSubscription,
 } from "@/lib/store";
 import { deliverAlert } from "@/lib/deliver";
-import { stageStartMessage, stageFinishMessage, incidentMessage, serviceEstimatesMessage, batchMessages } from "@/lib/messages";
+import { stageStartMessage, stageFinishMessage, incidentMessage, safetyStatusMessage, serviceEstimatesMessage, batchMessages } from "@/lib/messages";
 import { buildStageTimesMessage, buildOverallTimeMessage } from "@/lib/rally-engine";
 import { serviceEstimatesForCar, eventNameForId } from "@/lib/combiner";
 
@@ -84,7 +84,8 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
     const currentRacingStatus = live.racingStatus ?? 0;
     const onStageRacing = currentRacingStatus === 1 && currentStageNumber > 0;
     const speedLow = (live.speed ?? 0) < SPEED_STOPPED_MAX;
-    const hasFix = Number.isFinite(live.lat) && Number.isFinite(live.lng) && !(live.lat === 0 && live.lng === 0);
+    const gpsStatus = Number((live as { gpsStatus?: number }).gpsStatus ?? 0);
+    const hasFix = gpsStatus > 0 || (Number.isFinite(live.lat) && Number.isFinite(live.lng) && !(live.lat === 0 && live.lng === 0));
     const age = gpsAgeMs(live.lastMessageTimestamp, now);
     const gpsFresh = age !== null && age >= 0 && age <= GPS_MAX_AGE_MS;
 
@@ -133,17 +134,44 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
     }
 
     const stoppedDurationMs = stoppedSinceTs ? now - stoppedSinceTs : 0;
+    // The unit's own safety flag is the authoritative incident signal: it's set when the
+    // car stops on stage (auto-hazard), when the crew presses OK/HAZARD/SOS, or on a
+    // high-G impact (auto-SOS). 0 = none, 1 = OK, 2 = hazard, 3 = SOS. Hazard/SOS is an
+    // immediate incident; otherwise we fall back to the stationary heuristic below.
+    const safetyStatus = Number((live as { safetyStatus?: number }).safetyStatus ?? 0);
+    const unitSafetyEvent = safetyStatus >= 2;
+    let incidentIsSafetyEvent = false;
+    let safetyStatusValue = 0;
     let shouldAlertIncident =
       qualifying &&
       stoppedDurationMs > STOPPED_THRESHOLD_MS &&
       incidentQualifyCount >= MIN_QUALIFYING_PACKETS &&
       !alertSentForThisStop;
 
+    if (unitSafetyEvent) {
+      shouldAlertIncident = true;
+      incidentIsSafetyEvent = true;
+      safetyStatusValue = safetyStatus;
+      console.info("RallySafe safety flag observed", {
+        eventId,
+        entryId,
+        car: live.identifier,
+        safetyStatus,
+        racingStatus: currentRacingStatus,
+        speed: live.speed,
+        stageNumber: currentStageNumber,
+      });
+    }
+
     // Claim + mark the incident BEFORE persisting state or delivering, so overlapping
     // cron ticks can't both fire the same stop (same race start/finish alerts are
     // already protected against via claimAlert above).
     if (shouldAlertIncident) {
-      const claimed = await claimAlert(`alert:incident:${eventId}:${entryId}:${stoppedSinceTs ?? 0}`);
+      const claimed = await claimAlert(
+        incidentIsSafetyEvent
+          ? `alert:safety:${eventId}:${entryId}:${currentStageNumber}:${safetyStatus}`
+          : `alert:incident:${eventId}:${entryId}:${stoppedSinceTs ?? 0}`
+      );
       if (claimed) {
         alertSentForThisStop = true;
       } else {
@@ -288,9 +316,14 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
         });
       }
       if (sub.alerts.incidentDetection && shouldAlertIncident) {
-        const minutesStopped = Math.round(stoppedDurationMs / 60000);
-        const mapsLink = `https://maps.google.com/?q=${live.lat},${live.lng}`;
-        queue.push({ kind: "incidentDetection", body: incidentMessage(sub, minutesStopped, mapsLink) });
+        const body = incidentIsSafetyEvent
+          ? safetyStatusMessage(sub, safetyStatusValue)
+          : incidentMessage(
+              sub,
+              Math.round(stoppedDurationMs / 60000),
+              `https://maps.google.com/?q=${live.lat},${live.lng}`
+            );
+        queue.push({ kind: "incidentDetection", body });
       }
 
       if (queue.length > 0) {
