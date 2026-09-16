@@ -81,7 +81,8 @@ export function DevConsole() {
     overall: { standings: { number: number; driverName: string; totalMs: number; isRetired: boolean }[]; stages: { name: string; status: string }[] };
     irregularities: { t: number; severity: string; source: string; message: string }[];
     itinerary?: Stage[];
-    config?: { bulletinUrl?: string; serviceDurationsCsv?: string };
+    configs?: { name: string; bulletinUrl?: string; serviceDurationsCsv?: string; updatedAt: number }[];
+    activeConfigName?: string | null;
   } | null>(null);
   const [missing, setMissing] = useState(false);
   const [health, setHealth] = useState("");
@@ -92,6 +93,7 @@ export function DevConsole() {
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
   const [bulletinUrl, setBulletinUrl] = useState("");
   const [serviceDurationsCsv, setServiceDurationsCsv] = useState("");
+  const [configName, setConfigName] = useState("");
 
   const [fail, setFail] = useState("");
 
@@ -120,8 +122,10 @@ export function DevConsole() {
         }
         setFail("");
         setData(d);
-        setBulletinUrl(d.config?.bulletinUrl ?? "");
-        setServiceDurationsCsv(d.config?.serviceDurationsCsv ?? "");
+        const active = (d.configs ?? []).find((c: { name: string }) => c.name === d.activeConfigName);
+        setConfigName(d.activeConfigName ?? "");
+        setBulletinUrl(active?.bulletinUrl ?? "");
+        setServiceDurationsCsv(active?.serviceDurationsCsv ?? "");
         setGamble((d.users as UserRow[]).filter((u) => u.can_gamble).map((u) => u.id));
       })
       .catch((e) => setFail(String(e)));
@@ -286,12 +290,18 @@ export function DevConsole() {
         </section>
 
         <section className="rounded-xl border border-white/10 bg-[#11151c] p-4 space-y-3">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Event config — bulletin + service times</div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Event config — named &amp; saved for history</div>
           <p className="text-xs text-neutral-400">
-            Paste the Sportity bulletin URL for the live event (drives the bulletin scanner and Telegram
-            alerts). Then paste the service durations from the schedule, comma-separated — e.g.
-            <span className="text-brand-gold font-mono">60,60,30</span> = service 1: 60min, 2: 60min, 3: 30min.
+            Every event is saved under its own name and never overwritten. Give each rally a name,
+            paste its bulletin URL and service durations (comma-separated, e.g.
+            <span className="text-brand-gold font-mono">60,60,30</span>).
           </p>
+          <input
+            className="w-full bg-[#0a0e14] border border-white/10 rounded px-3 py-2 text-base"
+            value={configName}
+            onChange={(e) => setConfigName(e.target.value)}
+            placeholder="Name, e.g. Overmountain 2026"
+          />
           <input
             className="w-full bg-[#0a0e14] border border-white/10 rounded px-3 py-2 text-base"
             value={bulletinUrl}
@@ -306,9 +316,42 @@ export function DevConsole() {
           />
           <Tap
             gold
-            label="Save event config"
-            onClick={() => post({ action: "event-config", bulletinUrl, serviceDurationsCsv })}
+            label="Save & activate"
+            onClick={() => post({ action: "event-config", name: configName, bulletinUrl, serviceDurationsCsv })}
           />
+
+          {(data.configs ?? []).length > 0 && (
+            <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 pt-2">Saved configs</div>
+          )}
+          <div className="space-y-1">
+            {(data.configs ?? []).map((c) => (
+              <div
+                key={c.name}
+                className={`flex items-center gap-2 rounded-md border px-3 py-2 ${c.name === data.activeConfigName ? "border-brand-gold/60" : "border-white/10"}`}
+              >
+                <button
+                  type="button"
+                  className="flex-1 text-left min-w-0"
+                  onClick={() => {
+                    setConfigName(c.name);
+                    setBulletinUrl(c.bulletinUrl ?? "");
+                    setServiceDurationsCsv(c.serviceDurationsCsv ?? "");
+                  }}
+                >
+                  <div className="text-sm truncate">
+                    {c.name}
+                    {c.name === data.activeConfigName ? " · active" : ""}
+                  </div>
+                  <div className="text-[11px] text-neutral-500 truncate">
+                    {c.serviceDurationsCsv || "no durations"} · {new Date(c.updatedAt).toLocaleDateString()}
+                  </div>
+                </button>
+                {c.name !== data.activeConfigName && (
+                  <Tap label="Activate" onClick={() => post({ action: "event-config-activate", name: c.name })} />
+                )}
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="rounded-xl border border-white/10 bg-[#11151c] p-4 space-y-3">

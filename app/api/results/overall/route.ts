@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findCombinerEventByName, computeOverallStandings } from "@/lib/combiner";
-import { getEventConfig } from "@/lib/sportity";
+import { getActiveServiceDurationsCsv } from "@/lib/sportity";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       serviceIn: data.serviceIn,
       timeZone: data.timeZone,
       stagesCompleted,
-      serviceDurationsCsv: (await getEventConfig()).serviceDurationsCsv,
+      serviceDurationsCsv: await getActiveServiceDurationsCsv(),
       source: "combiner",
     });
   } catch (err) {

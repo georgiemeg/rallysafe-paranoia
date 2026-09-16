@@ -10,29 +10,74 @@ const SPORTITY_URL =
   "https://webapp.sportity.com/event/OVRMTN2026/1f16be91-de1f-43e4-adf3-f8c848ebec7f";
 
 const SEEN_KEY = "sportity:seen";
-const CONFIG_KEY = "event-config";
+const CONFIGS_KEY = "event-configs"; // Redis hash: config name -> JSON EventConfig
+const ACTIVE_KEY = "event-config:active";
 
 export interface EventConfig {
-  /** Sportity bulletin page URL for the current event. */
+  name: string;
+  /** Sportity bulletin page URL for this event. */
   bulletinUrl?: string;
   /** Comma-separated service durations, e.g. "60,60,30" = service 1: 60min, 2: 60min, 3: 30min. */
   serviceDurationsCsv?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
-export async function getEventConfig(): Promise<EventConfig> {
-  return (await redis.get<EventConfig>(CONFIG_KEY)) ?? {};
+/** All saved configs, most-recently-updated first. Nothing is ever overwritten — every
+ * event you save is kept for history, so you can flip back to a past event any time. */
+export async function listEventConfigs(): Promise<EventConfig[]> {
+  const hash = (await redis.hgetall<Record<string, string>>(CONFIGS_KEY)) ?? {};
+  return Object.values(hash)
+    .map((raw) => JSON.parse(raw) as EventConfig)
+    .sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-export async function setEventConfig(patch: Partial<EventConfig>): Promise<EventConfig> {
-  const cur = await getEventConfig();
-  const next = { ...cur, ...patch };
-  await redis.set(CONFIG_KEY, next);
-  return next;
+export async function getEventConfigByName(name: string): Promise<EventConfig | null> {
+  const raw = await redis.hget<string>(CONFIGS_KEY, name);
+  return raw ? (JSON.parse(raw) as EventConfig) : null;
+}
+
+/** Upsert a named config. Same name = update in place (keeps history of that name); a new
+ * name = a brand new entry, leaving all previous events untouched. */
+export async function saveEventConfig(
+  name: string,
+  patch: { bulletinUrl?: string; serviceDurationsCsv?: string }
+): Promise<EventConfig> {
+  const now = Date.now();
+  const existing = await getEventConfigByName(name);
+  const cfg: EventConfig = {
+    name,
+    bulletinUrl: patch.bulletinUrl ?? existing?.bulletinUrl ?? "",
+    serviceDurationsCsv: patch.serviceDurationsCsv ?? existing?.serviceDurationsCsv ?? "",
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  };
+  await redis.hset(CONFIGS_KEY, { [name]: JSON.stringify(cfg) });
+  return cfg;
+}
+
+export async function setActiveEventConfig(name: string): Promise<void> {
+  await redis.set(ACTIVE_KEY, name);
+}
+
+export async function getActiveEventConfig(): Promise<EventConfig | null> {
+  const activeName = await redis.get<string>(ACTIVE_KEY);
+  if (activeName) {
+    const cfg = await getEventConfigByName(activeName);
+    if (cfg) return cfg;
+  }
+  // No active set yet — default to the most recently updated one.
+  const all = await listEventConfigs();
+  return all[0] ?? null;
 }
 
 export async function getBulletinUrl(): Promise<string> {
-  const cfg = await getEventConfig();
-  return cfg.bulletinUrl || process.env.SPORTITY_BULLETIN_URL || SPORTITY_URL;
+  const active = await getActiveEventConfig();
+  return active?.bulletinUrl || process.env.SPORTITY_BULLETIN_URL || SPORTITY_URL;
+}
+
+export async function getActiveServiceDurationsCsv(): Promise<string | undefined> {
+  return (await getActiveEventConfig())?.serviceDurationsCsv;
 }
 
 export interface SportityDoc {

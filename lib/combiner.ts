@@ -286,8 +286,8 @@ export interface ServiceEstimateForCar {
 const SERVICE_DURATION_MINS: Record<number, number> = { 1: 60, 2: 60, 3: 30 };
 
 async function serviceDurations(): Promise<Record<number, number>> {
-  const { getEventConfig } = await import("@/lib/sportity");
-  const csv = (await getEventConfig()).serviceDurationsCsv;
+  const { getActiveServiceDurationsCsv } = await import("@/lib/sportity");
+  const csv = await getActiveServiceDurationsCsv();
   if (!csv) return SERVICE_DURATION_MINS;
   const parts = csv.split(",").map((s) => Number(s.trim()));
   if (!parts.length || parts.some((n) => !Number.isFinite(n) || n <= 0)) return SERVICE_DURATION_MINS;

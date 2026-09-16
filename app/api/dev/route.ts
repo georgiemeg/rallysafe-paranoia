@@ -5,7 +5,7 @@ import { ensureUserSchema, getPool } from "@/lib/db";
 import { normalizePhone, normalizeUsername, validEmail, validUsername } from "@/lib/auth";
 import { getSimState, listIrregularities, runSimScript, setSimState, simInject, simOverall, crewForCar, entryIdForCar, fireSimTick, advancePlayback, trackSnapshot, applyIncident, skipOvernight, panicStop, simElapsed, resumePlayback } from "@/lib/sim/engine";
 import { TEST_EVENT_ID, TEST_EVENT_NAME } from "@/lib/sim/ids";
-import { getEventConfig, setEventConfig } from "@/lib/sportity";
+import { listEventConfigs, saveEventConfig, setActiveEventConfig, getActiveEventConfig } from "@/lib/sportity";
 import itinerary from "@/lib/sim/seed/itinerary.json";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,8 @@ export async function GET() {
       irregularities: irr,
       itinerary,
       track: trackSnapshot(sim),
-      config: await getEventConfig(),
+      configs: await listEventConfigs(),
+      activeConfigName: (await getActiveEventConfig())?.name ?? null,
     });
   } catch (err) {
     console.error(err);
@@ -206,11 +207,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
   if (body.action === "event-config") {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (!name) return NextResponse.json({ error: "Name the config (e.g. 'Overmountain 2026')." }, { status: 400 });
     const patch: { bulletinUrl?: string; serviceDurationsCsv?: string } = {};
     if (typeof body.bulletinUrl === "string") patch.bulletinUrl = body.bulletinUrl.trim();
     if (typeof body.serviceDurationsCsv === "string") patch.serviceDurationsCsv = body.serviceDurationsCsv.trim();
-    const config = await setEventConfig(patch);
+    const config = await saveEventConfig(name, patch);
+    if (body.active !== false) await setActiveEventConfig(name);
     return NextResponse.json({ ok: true, config });
+  }
+  if (body.action === "event-config-activate") {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    if (!name) return NextResponse.json({ error: "Missing config name." }, { status: 400 });
+    await setActiveEventConfig(name);
+    return NextResponse.json({ ok: true, active: name });
   }
   return NextResponse.json({ error: "Bad request" }, { status: 400 });
 }
