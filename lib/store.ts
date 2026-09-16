@@ -9,8 +9,16 @@ export interface DeviceProfile {
   createdAt: number;
   updatedAt: number;
   smsEnabled?: boolean;
-  smsConsentAt?: number; // when the user checked the opt-in box on /text-signup
+  smsConsentAt?: number; // mirror of phone-level consent, kept for the in-app settings UI
   smsConsentIp?: string;
+}
+
+/** Twilio-required opt-in evidence, keyed by PHONE NUMBER (not device) so consent
+ * persists across browsers/devices and a new number always has to opt in again. */
+export interface PhoneConsent {
+  phone: string;
+  consentedAt: number;
+  consentIp?: string;
 }
 
 export const ALERT_TYPES = [
@@ -103,6 +111,20 @@ export async function listInbox(deviceId: string): Promise<InboxMessage[]> {
 export async function saveDevice(profile: DeviceProfile) {
   await redis.set(k.device(profile.deviceId), profile);
   await indexPhone(profile.phone, profile.deviceId);
+}
+
+export async function getPhoneConsent(phone: string): Promise<PhoneConsent | null> {
+  return redis.get<PhoneConsent>(`phone-consent:${phone}`);
+}
+
+export async function recordPhoneConsent(phone: string, ip?: string): Promise<PhoneConsent> {
+  const record: PhoneConsent = { phone, consentedAt: Date.now(), consentIp: ip };
+  await redis.set(`phone-consent:${phone}`, record);
+  return record;
+}
+
+export async function revokePhoneConsent(phone: string): Promise<void> {
+  await redis.del(`phone-consent:${phone}`);
 }
 
 export async function getDevice(deviceId: string): Promise<DeviceProfile | null> {

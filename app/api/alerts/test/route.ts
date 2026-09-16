@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDevice, saveDevice } from "@/lib/store";
+import { getDevice, saveDevice, getPhoneConsent, recordPhoneConsent } from "@/lib/store";
 import { deliverAlert } from "@/lib/deliver";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
   const deviceId = typeof body.deviceId === "string" ? body.deviceId : "";
   const phoneRaw = typeof body.phone === "string" ? body.phone : "";
   const eventId = typeof body.eventId === "number" ? body.eventId : 0;
+  const smsConsent = body.smsConsent === true;
 
   if (!deviceId) {
     return NextResponse.json({ error: "deviceId is required" }, { status: 400 });
@@ -24,6 +25,17 @@ export async function POST(req: NextRequest) {
   const phone = normalizePhone(phoneRaw);
   if (!phone) {
     return NextResponse.json({ error: "Enter a valid phone number first." }, { status: 400 });
+  }
+
+  // Same consent gate as the Save & Start Tracking flow: a test text is still an outbound
+  // SMS to a real number, so Twilio requires opt-in before it can be sent.
+  const phoneConsent = await getPhoneConsent(phone);
+  if (!phoneConsent && !smsConsent) {
+    return NextResponse.json({ error: "SMS consent is required before texts can be sent.", needsConsent: true }, { status: 400 });
+  }
+  const consentIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (smsConsent && !phoneConsent) {
+    await recordPhoneConsent(phone, consentIp);
   }
 
   const now = Date.now();
@@ -36,7 +48,8 @@ export async function POST(req: NextRequest) {
   });
 
   const text =
-    "RallySafe Paranoia test. If you got this, texts are working. Save this number in your contacts so real alerts don't get filtered.";
+    "RallySafe Paranoia test. If you got this, texts are working. Reply STOP to unsubscribe. " +
+    "Save this number in your contacts so real alerts don't get filtered.";
 
   const result = await deliverAlert({
     deviceId,

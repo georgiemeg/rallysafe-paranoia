@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import twilio from "twilio";
-import { findDeviceByPhone, deviceIdsForPhone, getDevice, saveDevice } from "@/lib/store";
+import { findDeviceByPhone, deviceIdsForPhone, getDevice, saveDevice, revokePhoneConsent, recordPhoneConsent } from "@/lib/store";
 import { runCommand } from "@/lib/commands";
 import { HELP_MESSAGE } from "@/lib/messages";
 
@@ -67,6 +67,8 @@ export async function POST(req: NextRequest) {
       const d = await getDevice(id);
       if (d) await saveDevice({ ...d, smsEnabled: false, updatedAt: Date.now() });
     }
+    // Opt-out revokes consent for this phone number across all devices.
+    await revokePhoneConsent(from);
     return twiml(
       "You're unsubscribed from RallySafe Paranoia texts and won't receive any more. Reply START to opt back in."
     );
@@ -83,6 +85,8 @@ export async function POST(req: NextRequest) {
       const d = await getDevice(id);
       if (d) await saveDevice({ ...d, smsEnabled: true, updatedAt: Date.now() });
     }
+    // Texting START is a valid opt-in method; record the consent evidence.
+    await recordPhoneConsent(from);
     return twiml("You're re-subscribed to RallySafe Paranoia texts. Reply HELP for commands, STOP to opt out again.");
   }
 

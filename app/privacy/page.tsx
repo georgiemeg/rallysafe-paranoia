@@ -32,6 +32,11 @@ export default function PrivacyPage() {
           other use case categories exclude text messaging originator opt-in data and consent; this information will
           not be shared with any third parties.
         </p>
+        <p>
+          Message frequency varies with how many cars you track and how active the event is — commonly several
+          messages per hour during a live rally, and none when no event is running. Message and data rates may
+          apply. Reply HELP for help or STOP to cancel at any time.
+        </p>
 
         <h2 className="text-neutral-100 font-semibold text-base pt-2">Opting out</h2>
         <p>

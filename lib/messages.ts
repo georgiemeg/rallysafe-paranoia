@@ -200,4 +200,6 @@ export const HELP_MESSAGE = [
   "CAR <number> ALL CLASSES — switch back to comparing against all classes",
   "",
   "Example: CAR 25 CLASS ONLY",
+  "",
+  "Msg & data rates may apply. Reply STOP to cancel anytime.",
 ].join("\n");

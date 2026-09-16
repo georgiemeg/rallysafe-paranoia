@@ -155,6 +155,7 @@ export function HomeMobile() {
   const [saveMessage, setSaveMessage] = useState("");
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [showConsent, setShowConsent] = useState(false);
+  const [pendingConsentAction, setPendingConsentAction] = useState<null | "save" | "test">(null);
   const [search, setSearch] = useState("");
   const [testing, setTesting] = useState(false);
   const [testMessage, setTestMessage] = useState("");
@@ -343,7 +344,7 @@ export function HomeMobile() {
     });
   }, []);
 
-  const performSave = async () => {
+  const performSave = async (withConsent: boolean) => {
     if (!selectedEvent) return;
     setSaving(true);
     setSaveMessage("");
@@ -354,7 +355,7 @@ export function HomeMobile() {
         body: JSON.stringify({
           deviceId,
           phone,
-          smsConsent: true,
+          smsConsent: withConsent,
           eventId: selectedEvent.eventId,
           cars: Array.from(tracked.values()).map((c) => ({
             entryId: c.entryId,
@@ -370,12 +371,14 @@ export function HomeMobile() {
       const data = await res.json();
       if (!res.ok) {
         if (data.needsConsent) {
+          setPendingConsentAction("save");
           setShowConsent(true);
           setSaveMessage("");
         } else {
           setSaveMessage(data.error ?? "Failed to save.");
         }
       } else {
+        saveSmsConsentLocally();
         savePhoneLocally(data.phone);
         setPhone(data.phone);
         setSaveMessage(`Saved! Tracking ${tracked.size} car(s).`);
@@ -412,20 +415,7 @@ export function HomeMobile() {
     }
   };
 
-  const handleSave = async () => {
-    if (!selectedEvent) return;
-    if (!phone.trim()) {
-      setSaveMessage("Enter a phone number first.");
-      return;
-    }
-    if (!hasSmsConsent()) {
-      setShowConsent(true);
-      return;
-    }
-    await performSave();
-  };
-
-  const handleTestText = async () => {
+  const performTestText = async (withConsent: boolean) => {
     if (!phone.trim()) {
       setTestMessage("Enter a phone number first.");
       return;
@@ -439,13 +429,21 @@ export function HomeMobile() {
         body: JSON.stringify({
           deviceId,
           phone,
+          smsConsent: withConsent,
           eventId: selectedEvent?.eventId ?? 0,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setTestMessage(data.error ?? "Test failed.");
+        if (data.needsConsent) {
+          setPendingConsentAction("test");
+          setShowConsent(true);
+          setTestMessage("");
+        } else {
+          setTestMessage(data.error ?? "Test failed.");
+        }
       } else if (data.sms) {
+        saveSmsConsentLocally();
         savePhoneLocally(data.phone);
         setPhone(data.phone);
         setTestMessage("Test text sent. Check your phone, and the in-app box if you have it open.");
@@ -461,6 +459,29 @@ export function HomeMobile() {
     } finally {
       setTesting(false);
     }
+  };
+
+  const requireConsent = (action: "save" | "test") => {
+    if (hasSmsConsent()) {
+      if (action === "save") void performSave(false);
+      else void performTestText(false);
+      return;
+    }
+    setPendingConsentAction(action);
+    setShowConsent(true);
+  };
+
+  const handleSave = async () => {
+    if (!selectedEvent) return;
+    if (!phone.trim()) {
+      setSaveMessage("Enter a phone number first.");
+      return;
+    }
+    requireConsent("save");
+  };
+
+  const handleTestText = async () => {
+    requireConsent("test");
   };
 
   const handleCommand = async () => {
@@ -881,9 +902,18 @@ export function HomeMobile() {
       {showConsent && (
         <SmsConsentModal
           phone={phone}
-          busy={saving}
-          onConfirm={() => { saveSmsConsentLocally(); setShowConsent(false); performSave(); }}
-          onCancel={() => setShowConsent(false)}
+          busy={saving || testing}
+          onConfirm={() => {
+            setShowConsent(false);
+            const action = pendingConsentAction;
+            setPendingConsentAction(null);
+            if (action === "test") void performTestText(true);
+            else void performSave(true);
+          }}
+          onCancel={() => {
+            setShowConsent(false);
+            setPendingConsentAction(null);
+          }}
         />
       )}
 

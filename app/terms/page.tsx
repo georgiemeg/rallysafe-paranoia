@@ -23,8 +23,8 @@ export default function TermsPage() {
           If you opt in to text alerts, you may receive automated SMS messages about the cars you&apos;re tracking.
           Message frequency varies with how many cars you track and how active the event is — commonly several
           messages per hour during a live rally, and none when no event is running. Message and data rates may
-          apply. Reply HELP for help, STOP to cancel at any time. Consent to receive texts is not required to use
-          the web app.
+          apply. Reply HELP for help, STOP to cancel at any time. Wireless carriers are not liable for delayed or
+          undelivered messages. Consent to receive texts is not required to use the web app.
         </p>
 
         <h2 className="text-neutral-100 font-semibold text-base pt-2">No warranty</h2>

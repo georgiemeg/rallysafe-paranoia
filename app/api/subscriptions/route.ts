@@ -4,6 +4,8 @@ import {
   saveSubscriptionsForEvent,
   getDevice,
   getDeviceSubscriptionsForEvent,
+  getPhoneConsent,
+  recordPhoneConsent,
   ALERT_TYPES,
   type AlertType,
   type CarSubscription,
@@ -60,22 +62,28 @@ export async function POST(req: NextRequest) {
   const isNewPhone = existingDevice?.phone !== normalized;
 
   // Twilio requires explicit, logged opt-in before the first SMS is ever sent to a number.
-  // Once a device has consented we don't re-ask on every save — only the very first time
-  // this deviceId is about to get real texts.
-  const alreadyConsented = Boolean(existingDevice?.smsConsentAt);
-  if (!alreadyConsented && smsConsent !== true) {
+  // Consent is tracked per PHONE NUMBER (not per device), so the same number keeps its opt-in
+  // across browsers/devices, and a new number always has to opt in again.
+  const phoneConsent = await getPhoneConsent(normalized);
+  if (!phoneConsent && smsConsent !== true) {
     return NextResponse.json({ error: "SMS consent is required before texts can be sent.", needsConsent: true }, { status: 400 });
   }
 
   const forwardedFor = req.headers.get("x-forwarded-for");
+  const consentIp = forwardedFor ? forwardedFor.split(",")[0].trim() : undefined;
+  const grantedNow = smsConsent === true && !phoneConsent;
+  if (grantedNow) {
+    await recordPhoneConsent(normalized, consentIp);
+  }
+
   await saveDevice({
     deviceId,
     phone: normalized,
     createdAt: existingDevice?.createdAt ?? now,
     updatedAt: now,
     smsEnabled: existingDevice?.smsEnabled ?? true,
-    smsConsentAt: existingDevice?.smsConsentAt ?? now,
-    smsConsentIp: existingDevice?.smsConsentIp ?? (forwardedFor ? forwardedFor.split(",")[0].trim() : undefined),
+    smsConsentAt: grantedNow ? now : existingDevice?.smsConsentAt,
+    smsConsentIp: grantedNow ? consentIp : existingDevice?.smsConsentIp,
   });
 
   const fullAlerts = (partial: Partial<Record<AlertType, boolean>>): Record<AlertType, boolean> => {
@@ -115,8 +123,9 @@ export async function POST(req: NextRequest) {
       ? carSubs.map((c) => `#${c.carNumber} ${c.driverName}`).join(", ")
       : "no cars yet";
     const savePrompt =
-      `RallySafe Paranoia is set up! Now tracking: ${carList}.\n\n` +
-      `Save this number to your contacts so alerts don't get missed — text HELP anytime for commands.`;
+      `RallySafe Paranoia: You're enrolled! Now tracking: ${carList}.\n\n` +
+      `Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. ` +
+      `Save this number to your contacts so alerts don't get missed.`;
     const delivered = await deliverAlert({
       deviceId,
       phone: normalized,
