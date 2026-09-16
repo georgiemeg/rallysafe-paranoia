@@ -135,7 +135,7 @@ export function SearchMorph() {
   return (
     <div ref={wrap} className="relative flex items-center shrink-0">
       <div
-        className={`flex items-center overflow-hidden border transition-[width,background-color,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`flex items-center overflow-hidden border transition-[width,background-color,border-radius] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus-within:border-brand-gold/60 ${
           open
             ? "w-[min(18rem,calc(100vw-8rem))] sm:w-72 rounded-full bg-[#11151c] border-white/20"
             : "w-10 rounded-full bg-transparent border-white/20 hover:border-white/40"

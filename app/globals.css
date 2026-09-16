@@ -207,8 +207,11 @@ html {
 .bg-brand-maroon { color: var(--brand-on-maroon) !important; }
 .bg-brand-ink { color: #ffffff !important; }
 
-/* Keyboard focus: a clear gold outline for tabbing through links/buttons/inputs. */
-:focus-visible {
+/* Keyboard focus: a clear gold outline for tabbing through links/buttons. Inputs and
+   selects already have their own focus rings, so we don't double-up there. */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
   outline: 2px solid var(--brand-gold);
   outline-offset: 2px;
 }
