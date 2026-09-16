@@ -26,15 +26,12 @@ export interface EventConfig {
 /** All saved configs, most-recently-updated first. Nothing is ever overwritten — every
  * event you save is kept for history, so you can flip back to a past event any time. */
 export async function listEventConfigs(): Promise<EventConfig[]> {
-  const hash = (await redis.hgetall<Record<string, string>>(CONFIGS_KEY)) ?? {};
-  return Object.values(hash)
-    .map((raw) => JSON.parse(raw) as EventConfig)
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+  const hash = (await redis.hgetall<Record<string, EventConfig>>(CONFIGS_KEY)) ?? {};
+  return Object.values(hash).sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
 export async function getEventConfigByName(name: string): Promise<EventConfig | null> {
-  const raw = await redis.hget<string>(CONFIGS_KEY, name);
-  return raw ? (JSON.parse(raw) as EventConfig) : null;
+  return (await redis.hget<EventConfig>(CONFIGS_KEY, name)) ?? null;
 }
 
 /** Upsert a named config. Same name = update in place (keeps history of that name); a new
@@ -52,7 +49,9 @@ export async function saveEventConfig(
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
-  await redis.hset(CONFIGS_KEY, { [name]: JSON.stringify(cfg) });
+  // Store the object directly — Upstash auto-serializes/deserializes JSON values, so
+  // passing a stringified value here would get double-encoded and break on read.
+  await redis.hset(CONFIGS_KEY, { [name]: cfg });
   return cfg;
 }
 
