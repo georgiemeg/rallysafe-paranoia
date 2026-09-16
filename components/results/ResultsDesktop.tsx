@@ -102,8 +102,9 @@ function formatLocalIsoAsIs(iso: string): string {
 }
 
 /** Service stops don't publish a departure time in the combiner feed — only the predicted
- * arrival. A stop is treated as 20 minutes (same default the SMS alert uses). */
-const SERVICE_OUT_MINS = 20;
+ * arrival. ARA service is 60 minutes (per the Overmountain supplementary regs: "Service A
+ * (Newport Speedway) 60"), so Out = In + 60. */
+const SERVICE_OUT_MINS = 60;
 
 /** Add minutes to a combiner local-wall-time ISO string (mislabeled "Z") so the "out" time
  * can be shown next to the "in" time. */

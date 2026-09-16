@@ -279,7 +279,7 @@ export interface ServiceEstimateForCar {
   durationMins?: number;
 }
 
-const SERVICE_IN_DEFAULT_MINS = 20;
+const SERVICE_IN_DEFAULT_MINS = 60; // official Overmountain/ARA service time (In→Out is 60 min)
 
 /** Look up an event's display name from its live-tracking eventId (cached). */
 export async function eventNameForId(eventId: number): Promise<string> {
