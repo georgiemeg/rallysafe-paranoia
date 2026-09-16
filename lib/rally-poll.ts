@@ -181,22 +181,50 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
 
     const prevStageNumber = prev?.lastKnownStageNumber ?? 0;
     const prevRacingStatus = prev?.lastKnownRacingStatus ?? 0;
+    const pendingFinish = prev?.pendingFinishStage ?? 0;
     const postedMs = Number((live as { stageTimeMs?: number }).stageTimeMs || 0);
     let justStartedStage = prevRacingStatus === 0 && currentRacingStatus === 1 && currentStageNumber > 0;
-    // Finish = racingStatus 1→0. We deliberately DON'T require postedMs>0 here: the live
-    // rc.statusas.com feed never populates stageTimeMs on the entry packet, so that check
-    // silently suppressed EVERY finish (and therefore every post-stage alert) for real
-    // events. Stage-times/overall are gated downstream on the results API actually having
-    // the time, and claimAlert below dedupes repeats.
-    let justFinishedStage =
-      prevRacingStatus === 1 && currentRacingStatus === 0 && prevStageNumber > 0;
+
+    // Finish = racingStatus 1→0, but a brief blip (hold/transit) can flicker 1→0→1 while the
+    // car is still on the stage, which used to fire a false "finished" and then suppress the
+    // real one via the claim. For real events we debounce: hold the 1→0 edge for one poll and
+    // only confirm it if the car stays off stage (or moves to a LATER stage) on the next poll.
+    // The sim (controlled, no flicker) finishes immediately so its stage-time recording stays
+    // in sync.
+    let justFinishedStage = false;
+    let finishedStageNumber: number | null = null;
+    let nextPendingFinish = pendingFinish;
+    const rawFinishEdge = prevRacingStatus === 1 && currentRacingStatus === 0 && prevStageNumber > 0;
+
+    if (eventId === 20251925) {
+      justFinishedStage = rawFinishEdge;
+      if (justFinishedStage) finishedStageNumber = prevStageNumber;
+      nextPendingFinish = 0;
+    } else if (rawFinishEdge) {
+      nextPendingFinish = prevStageNumber; // hold for one poll to confirm
+    } else if (pendingFinish > 0) {
+      if (currentRacingStatus === 1 && currentStageNumber > pendingFinish) {
+        // Moved on to a later stage — the pending stage really did finish.
+        justFinishedStage = true;
+        finishedStageNumber = pendingFinish;
+        nextPendingFinish = 0;
+      } else if (currentRacingStatus === 1) {
+        // Still racing the same stage — it was a blip; drop the pending finish.
+        nextPendingFinish = 0;
+      } else {
+        // Still off stage — confirm the finish.
+        justFinishedStage = true;
+        finishedStageNumber = pendingFinish;
+        nextPendingFinish = 0;
+      }
+    }
+
     if (justStartedStage) {
       justStartedStage = await claimAlert(`alert:start:${eventId}:${entryId}:${currentStageNumber}`);
     }
-    if (justFinishedStage) {
-      justFinishedStage = await claimAlert(`alert:finish:${eventId}:${entryId}:${prevStageNumber}`);
+    if (justFinishedStage && finishedStageNumber) {
+      justFinishedStage = await claimAlert(`alert:finish:${eventId}:${entryId}:${finishedStageNumber}`);
     }
-    const finishedStageNumber = justFinishedStage ? prevStageNumber : null;
 
     if (justFinishedStage && finishedStageNumber) {
       const ms = postedMs;
@@ -218,6 +246,7 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
       stopOriginLng,
       alertSentForThisStop,
       incidentQualifyCount,
+      pendingFinishStage: nextPendingFinish,
       lastKnownStageNumber: currentStageNumber,
       lastKnownRacingStatus: currentRacingStatus,
     });
@@ -387,6 +416,7 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
       stopOriginLng,
       alertSentForThisStop: shouldAlertIncident ? true : alertSentForThisStop,
       incidentQualifyCount,
+      pendingFinishStage: nextPendingFinish,
       lastKnownStageNumber: currentStageNumber,
       lastKnownRacingStatus: currentRacingStatus,
     });

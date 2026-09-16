@@ -74,6 +74,9 @@ export interface LiveTrackState {
   incidentQualifyCount: number;
   lastKnownStageNumber: number; // 0 = not on stage
   lastKnownRacingStatus: number;
+  /** When a raw racingStatus 1→0 edge is seen, we hold the stage number here for one
+   * poll to confirm it wasn't a blip before firing the finish alert. */
+  pendingFinishStage?: number;
 }
 
 /** Tracks which stage numbers we've already sent a "stage times"/"overall time" alert for,
