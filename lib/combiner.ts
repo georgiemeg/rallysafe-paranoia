@@ -233,6 +233,12 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
       return sum + (isTimeReducedReason(p.reason) ? -secs : secs);
     }, 0);
 
+    // DNF detection: trust the feed's retirements list when present, but also treat a car
+    // that's missing a time on an already-completed stage as out (the accumulateOverall
+    // "hole" rule). This is what keeps a car that retired after one stage (tiny total time)
+    // from floating to the top of the leaderboard.
+    const isRetired = (entry.retirements ?? []).length > 0 || Boolean(scored?.stopped);
+
     const board: "national" | "regional" = /^national$/i.test(entry.category ?? "")
       ? "national"
       : "regional";
@@ -249,7 +255,7 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
       totalMs: totalMsBase + penaltySecondsNet * 1000,
       gapToLeaderMs: 0,
       gapToAheadMs: 0,
-      isRetired: (entry.retirements ?? []).length > 0,
+      isRetired,
       isPenalized: penalties.length > 0,
       penaltySecondsNet,
       board,

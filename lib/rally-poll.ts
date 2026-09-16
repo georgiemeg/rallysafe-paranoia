@@ -155,11 +155,13 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
     const prevRacingStatus = prev?.lastKnownRacingStatus ?? 0;
     const postedMs = Number((live as { stageTimeMs?: number }).stageTimeMs || 0);
     let justStartedStage = prevRacingStatus === 0 && currentRacingStatus === 1 && currentStageNumber > 0;
-    // Finish is 1→0 AND a real posted stage time on this packet. A status flicker
-    // (hold, transit, catch-up) with stageTimeMs 0 is not a finish — that's how
-    // alerts were firing while the car was still on the stage.
+    // Finish = racingStatus 1→0. We deliberately DON'T require postedMs>0 here: the live
+    // rc.statusas.com feed never populates stageTimeMs on the entry packet, so that check
+    // silently suppressed EVERY finish (and therefore every post-stage alert) for real
+    // events. Stage-times/overall are gated downstream on the results API actually having
+    // the time, and claimAlert below dedupes repeats.
     let justFinishedStage =
-      prevRacingStatus === 1 && currentRacingStatus === 0 && prevStageNumber > 0 && postedMs > 0;
+      prevRacingStatus === 1 && currentRacingStatus === 0 && prevStageNumber > 0;
     if (justStartedStage) {
       justStartedStage = await claimAlert(`alert:start:${eventId}:${entryId}:${currentStageNumber}`);
     }
@@ -215,6 +217,14 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
       const serviceSent = new Set(resultsState?.serviceSentForStage ?? []);
       const dueStages: number[] = [];
       if (justFinishedStage && finishedStageNumber) dueStages.push(finishedStageNumber);
+      // Re-check every stage the car has reached so far, not just the one it just finished.
+      // The results API usually publishes a time a few seconds AFTER the racingStatus flip,
+      // so a single-shot attempt on the finish poll would miss it forever (this was why
+      // post-stage times/overall alerts never went out). Retrying all reached stages every
+      // poll — deduped by timesSent/overallSent/serviceSent — catches the time whenever it
+      // lands.
+      const maxReachedStage = Math.max(currentStageNumber, prevStageNumber, 0);
+      for (let n = 1; n <= maxReachedStage; n++) dueStages.push(n);
       if (eventId === 20251925) {
         const { getSimState } = await import("@/lib/sim/engine");
         const posted = (await getSimState()).postedTimes || {};
