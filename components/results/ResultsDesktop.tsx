@@ -101,6 +101,21 @@ function formatLocalIsoAsIs(iso: string): string {
   return `${weekday} ${h12}:${minute} ${ampm}`;
 }
 
+/** Service stops don't publish a departure time in the combiner feed — only the predicted
+ * arrival. A stop is treated as 20 minutes (same default the SMS alert uses). */
+const SERVICE_OUT_MINS = 20;
+
+/** Add minutes to a combiner local-wall-time ISO string (mislabeled "Z") so the "out" time
+ * can be shown next to the "in" time. */
+function addMinutesToLocalIso(iso: string, minutes: number): string {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return iso;
+  const [, y, mo, d, h, mi] = m.map(Number);
+  const total = h * 60 + mi + minutes;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${y}-${pad(mo)}-${pad(d)}T${pad(Math.floor(total / 60) % 24)}:${pad(total % 60)}:00`;
+}
+
 export function ResultsDesktop() {
   const [events, setEvents] = useState<RSEvent[]>([]);
   const [selected, setSelected] = useState<RSEvent | null>(null);
@@ -486,8 +501,8 @@ export function ResultsDesktop() {
                 {useEwrc
                   ? "Official eWRC results (penalties included in the total). Click a row for stage times. Right-click another car to compare. Double-click opens their eWRC profile."
                   : isAraEvent
-                    ? "Refreshes every 20s. Totals match Sneak Attack Rally: stage times plus penalties; cancelled stages stay on the itinerary but add no time. Click a row for predicted service times."
-                    : "Refreshes every 20s. Totals sum stage times plus penalties when the feed has them. DNF cars shown grayed out at the bottom. Service estimates aren't available for this event (ARA events only)."}
+                    ? "Refreshes every 20s. Totals match Sneak Attack Rally: stage times plus penalties; cancelled stages stay on the itinerary but add no time. Tap a car for its stage-by-stage times and predicted service times."
+                    : "Refreshes every 20s. Totals sum stage times plus penalties when the feed has them. DNF cars shown grayed out at the bottom. Tap a car for its stage times. Service estimates aren't available for this event (ARA events only)."}
               </p>
 
               {useEwrc && (overall.surface || overall.totalDistanceKm || overall.mapUrl) && (
@@ -589,7 +604,10 @@ export function ResultsDesktop() {
                                 Service {s.serviceNumber}
                               </div>
                               <div className="font-mono text-sm text-amber-400 font-bold">
-                                {formatLocalIsoAsIs(s.due)}
+                                In: {formatLocalIsoAsIs(s.due)}
+                              </div>
+                              <div className="font-mono text-sm text-neutral-300">
+                                Out: {formatLocalIsoAsIs(addMinutesToLocalIso(s.due, SERVICE_OUT_MINS))}
                               </div>
                             </div>
                           );

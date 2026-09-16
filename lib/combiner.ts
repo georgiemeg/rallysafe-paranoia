@@ -221,9 +221,11 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
       data.stages.map((s) => s.status || ""),
       timesMs
     );
-    if (!scored) continue;
-    const totalMsBase = scored.totalMs;
-    const lastStage = scored.lastStage;
+    // Pre-event (no completed stages yet) scored is null — still list the entry with 0
+    // stages / 0 time so the Results page shows the full entry list before SS1 instead of
+    // an empty table.
+    const totalMsBase = scored?.totalMs ?? 0;
+    const lastStage = scored?.lastStage ?? 0;
 
     const penalties = entry.penalties ?? [];
     const penaltySecondsNet = penalties.reduce((sum, p) => {
