@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getDeviceId, getSavedPhone, savePhoneLocally, hasSmsConsent, saveSmsConsentLocally } from "@/lib/device";
+import { getDeviceId, getSavedPhone, savePhoneLocally, hasSmsConsent, saveSmsConsentLocally, getLastEventId, saveLastEventId } from "@/lib/device";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { SmsConsentModal } from "@/components/home/SmsConsentModal";
@@ -177,8 +177,14 @@ export function HomeDesktop() {
         const list = d.events ?? [];
         setEvents(list);
         setAraEventIds(new Set<number>(d.araEventIds ?? []));
-        const activeId = d.activeEventId ?? list[0]?.eventId ?? null;
-        const match = list.find((ev: RSEvent) => ev.eventId === activeId);
+        // Default to the event this device last started tracking, else the server's
+        // "active" event, else the first in the list.
+        const lastId = getLastEventId();
+        const preferredId =
+          lastId && list.some((ev: RSEvent) => ev.eventId === lastId)
+            ? lastId
+            : d.activeEventId ?? list[0]?.eventId ?? null;
+        const match = list.find((ev: RSEvent) => ev.eventId === preferredId);
         if (match) setSelectedEvent(match);
       })
       .catch(() => setEvents([]))
@@ -360,6 +366,7 @@ export function HomeDesktop() {
       } else {
         saveSmsConsentLocally();
         savePhoneLocally(data.phone);
+        saveLastEventId(selectedEvent.eventId);
         setPhone(data.phone);
         setSaveMessage(`Saved! Tracking ${tracked.size} car(s).`);
         fetch("/api/auth/account", {
@@ -549,6 +556,7 @@ export function HomeDesktop() {
               onChange={(e) => {
                 const ev = events.find((ev) => ev.eventId === Number(e.target.value));
                 setSelectedEvent(ev ?? null);
+                if (ev) saveLastEventId(ev.eventId);
               }}
             >
               <option value="">Select an event...</option>

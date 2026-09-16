@@ -212,6 +212,10 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
   const stagesTotal = data.stages.length;
 
   for (const entry of data.entries) {
+    // STRYKER Challenge is a separate support series, excluded from the national/regional
+    // overall classification (matches how sneakattackrally.com itself separates it out).
+    if (/stryker/i.test(entry.category ?? "")) continue;
+
     const timesMs = data.stages.map((_, y) => parseTimeToMs(entry.times[y] ?? ""));
     const scored = accumulateOverall(
       data.stages.map((s) => s.status || ""),
@@ -253,4 +257,55 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
   const national = rankByFieldDistance(rows.filter((r) => r.board === "national"));
   const regional = rankByFieldDistance(rows.filter((r) => r.board === "regional"));
   return [...national, ...regional];
+}
+
+// ---------------------------------------------------------------------------
+// Service-time predictions for real ARA events (the live combiner's serviceIn
+// feed) — so the "Service Estimates" alert and the SERVICE CHECK command work
+// for real rallies, not just the built-in test event.
+// ---------------------------------------------------------------------------
+
+export interface ServiceEstimateForCar {
+  serviceNumber: number;
+  due: string; // rally-local wall time (the feed stores local time with a Z suffix)
+  durationMins?: number;
+}
+
+const SERVICE_IN_DEFAULT_MINS = 20;
+
+/** Look up an event's display name from its live-tracking eventId (cached). */
+export async function eventNameForId(eventId: number): Promise<string> {
+  const hit = eventNameByIdCache.get(eventId);
+  if (hit) return hit;
+  const { listEvents } = await import("@/lib/rallysafe");
+  try {
+    const events = await listEvents({ take: 80 });
+    for (const e of events) {
+      if (!eventNameByIdCache.has(e.eventId)) eventNameByIdCache.set(e.eventId, e.name);
+    }
+  } catch {
+    // fall through — cache stays empty and the caller treats it as "no name"
+  }
+  return eventNameByIdCache.get(eventId) ?? "";
+}
+
+const eventNameByIdCache = new Map<number, string>();
+
+/** Predicted service arrival times for one car, from the live ARA combiner. */
+export async function serviceEstimatesForCar(
+  eventName: string,
+  carNumber: string
+): Promise<ServiceEstimateForCar[] | null> {
+  const data = await findCombinerEventByName(eventName);
+  if (!data) return null;
+  const num = Number(carNumber);
+  const list = (data.serviceIn ?? [])
+    .filter((s) => s.number === num)
+    .sort((a, b) => a.serviceNumber - b.serviceNumber)
+    .map((s) => ({
+      serviceNumber: s.serviceNumber,
+      due: s.due,
+      durationMins: SERVICE_IN_DEFAULT_MINS,
+    }));
+  return list.length ? list : null;
 }

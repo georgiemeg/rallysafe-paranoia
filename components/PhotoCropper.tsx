@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const VIEW = 280;
-const OUT = 512;
+const OUT = 1024;
 
 export function PhotoCropper({
   file,
@@ -77,7 +77,7 @@ export function PhotoCropper({
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, -x / scale, -y / scale, VIEW / scale, VIEW / scale, 0, 0, OUT, OUT);
-    onConfirm(canvas.toDataURL("image/jpeg", 0.9));
+    onConfirm(canvas.toDataURL("image/jpeg", 0.92));
   };
 
   return (

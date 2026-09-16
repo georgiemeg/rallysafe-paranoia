@@ -309,21 +309,24 @@ export async function stageTimeCheck(subs: CarSubscription[]): Promise<string> {
 }
 
 export async function serviceCheck(subs: CarSubscription[]): Promise<string> {
-  const { simUpcomingServiceEstimatesFor } = await import("@/lib/sim/engine");
   const { serviceEstimatesMessage } = await import("@/lib/messages");
+  const { serviceEstimatesForCar, eventNameForId } = await import("@/lib/combiner");
   const blocks: string[] = [];
   for (const car of subs) {
-    if (car.eventId !== 20251925) {
-      blocks.push(`Car #${car.carNumber}: service estimates are only available for the RallySafe Paranoia test event right now.`);
-      continue;
+    let estimates: { serviceNumber: number; due: string; durationMins?: number }[] | null = null;
+    if (car.eventId === 20251925) {
+      const { simUpcomingServiceEstimatesFor } = await import("@/lib/sim/engine");
+      const stage = await loadLatestStageField(car.eventId, "");
+      const completedStage = stage
+        ? (await import("@/lib/sim/seed/itinerary.json")).default.find((s: { name: string }) => s.name === stage.name)?.n ?? 0
+        : 0;
+      estimates = simUpcomingServiceEstimatesFor(car.carNumber, completedStage);
+    } else {
+      const name = await eventNameForId(car.eventId);
+      if (name) estimates = await serviceEstimatesForCar(name, car.carNumber);
     }
-    const stage = await loadLatestStageField(car.eventId, "");
-    const completedStage = stage
-      ? (await import("@/lib/sim/seed/itinerary.json")).default.find((s: { name: string }) => s.name === stage.name)?.n ?? 0
-      : 0;
-    const estimates = simUpcomingServiceEstimatesFor(car.carNumber, completedStage);
-    if (!estimates.length) {
-      blocks.push(`Car #${car.carNumber} (${car.driverName}): no more service stops scheduled.`);
+    if (!estimates || !estimates.length) {
+      blocks.push(`Car #${car.carNumber} (${car.driverName}): no service predictions available yet.`);
       continue;
     }
     blocks.push(serviceEstimatesMessage(car, estimates));

@@ -46,3 +46,19 @@ export function saveSmsConsentLocally() {
   if (typeof window === "undefined") return;
   localStorage.setItem(SMS_CONSENT_KEY, "1");
 }
+
+const LAST_EVENT_KEY = "rallysafe-paranoia:lastEventId";
+
+/** The event this browser last selected/started tracking, so it can be re-selected by
+ * default on the next page load instead of always snapping back to the "active" event. */
+export function getLastEventId(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(LAST_EVENT_KEY);
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export function saveLastEventId(eventId: number) {
+  if (typeof window === "undefined" || !eventId) return;
+  localStorage.setItem(LAST_EVENT_KEY, String(eventId));
+}

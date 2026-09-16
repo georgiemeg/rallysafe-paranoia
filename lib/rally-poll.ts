@@ -15,6 +15,7 @@ import {
 import { deliverAlert } from "@/lib/deliver";
 import { stageStartMessage, stageFinishMessage, incidentMessage, serviceEstimatesMessage, batchMessages } from "@/lib/messages";
 import { buildStageTimesMessage, buildOverallTimeMessage } from "@/lib/rally-engine";
+import { serviceEstimatesForCar, eventNameForId } from "@/lib/combiner";
 
 const STOPPED_THRESHOLD_MS = 60 * 1000;
 const SPEED_STOPPED_MAX = 5;
@@ -132,11 +133,23 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
     }
 
     const stoppedDurationMs = stoppedSinceTs ? now - stoppedSinceTs : 0;
-    const shouldAlertIncident =
+    let shouldAlertIncident =
       qualifying &&
       stoppedDurationMs > STOPPED_THRESHOLD_MS &&
       incidentQualifyCount >= MIN_QUALIFYING_PACKETS &&
       !alertSentForThisStop;
+
+    // Claim + mark the incident BEFORE persisting state or delivering, so overlapping
+    // cron ticks can't both fire the same stop (same race start/finish alerts are
+    // already protected against via claimAlert above).
+    if (shouldAlertIncident) {
+      const claimed = await claimAlert(`alert:incident:${eventId}:${entryId}:${stoppedSinceTs ?? 0}`);
+      if (claimed) {
+        alertSentForThisStop = true;
+      } else {
+        shouldAlertIncident = false;
+      }
+    }
 
     const prevStageNumber = prev?.lastKnownStageNumber ?? 0;
     const prevRacingStatus = prev?.lastKnownRacingStatus ?? 0;
@@ -235,10 +248,19 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
             console.error(`overallTime build failed for entry ${entryId} stage ${n}`, err);
           }
         }
-        if (sub.alerts.serviceEstimates && eventId === 20251925 && !serviceSent.has(n)) {
-          const { simServiceEstimatesFor } = await import("@/lib/sim/engine");
-          const estimates = simServiceEstimatesFor(sub.carNumber, n);
-          if (estimates.length) {
+        if (sub.alerts.serviceEstimates && !serviceSent.has(n)) {
+          const estimates =
+            eventId === 20251925
+              ? await (async () => {
+                  const { simServiceEstimatesFor } = await import("@/lib/sim/engine");
+                  return simServiceEstimatesFor(sub.carNumber, n);
+                })()
+              : await (async () => {
+                  const name = await eventNameForId(eventId);
+                  if (!name) return null;
+                  return serviceEstimatesForCar(name, sub.carNumber);
+                })();
+          if (estimates && estimates.length) {
             queue.push({ kind: "serviceEstimates", body: serviceEstimatesMessage(sub, estimates) });
             serviceSent.add(n);
           }
@@ -300,6 +322,7 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
               carNumber: sub.carNumber,
               alertType: queue[0].kind,
               body: combined,
+              inbox: false,
             });
             results.push({ eventId, entryId, deviceId, sentCount: queue.length, sms: delivered.sms, kind: "batch" });
           }

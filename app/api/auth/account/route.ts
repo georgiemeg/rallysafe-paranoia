@@ -87,8 +87,8 @@ export async function POST(req: NextRequest) {
     if (!m) return NextResponse.json({ error: "Need a photo file." }, { status: 400 });
     const mime = m[1].toLowerCase() === "image/jpg" ? "image/jpeg" : m[1].toLowerCase();
     const bytes = Buffer.from(m[3].replace(/\s/g, ""), "base64");
-    if (bytes.length < 32 || bytes.length > 450_000) {
-      return NextResponse.json({ error: "Photo must be under about 400 KB." }, { status: 400 });
+    if (bytes.length < 32 || bytes.length > 1_500_000) {
+      return NextResponse.json({ error: "Photo must be under about 1.4 MB." }, { status: 400 });
     }
     const photoUrl = await saveUserPhoto(user.id, user.username, bytes, mime);
     return NextResponse.json({ ok: true, photoUrl });
