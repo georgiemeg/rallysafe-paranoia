@@ -279,7 +279,11 @@ export interface ServiceEstimateForCar {
   durationMins?: number;
 }
 
-const SERVICE_IN_DEFAULT_MINS = 60; // official Overmountain/ARA service time (In→Out is 60 min)
+// Service In→Out duration per stop, from the Overmountain stage schedule (bulletin
+// itinerary V2): Service A = 60 min (both days), Service B = 30 min (National) / 50 min
+// (Regional). The combiner only publishes the arrival ("due") time, so we use the
+// National 30-min figure for the final stop as a sane default.
+const SERVICE_DURATION_MINS: Record<number, number> = { 1: 60, 2: 60, 3: 30 };
 
 /** Look up an event's display name from its live-tracking eventId (cached). */
 export async function eventNameForId(eventId: number): Promise<string> {
@@ -313,7 +317,7 @@ export async function serviceEstimatesForCar(
     .map((s) => ({
       serviceNumber: s.serviceNumber,
       due: s.due,
-      durationMins: SERVICE_IN_DEFAULT_MINS,
+      durationMins: SERVICE_DURATION_MINS[s.serviceNumber] ?? 30,
     }));
   return list.length ? list : null;
 }

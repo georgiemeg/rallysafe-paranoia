@@ -101,10 +101,10 @@ function formatLocalIsoAsIs(iso: string): string {
   return `${weekday} ${h12}:${minute} ${ampm}`;
 }
 
-/** Service stops don't publish a departure time in the combiner feed — only the predicted
- * arrival. ARA service is 60 minutes (per the Overmountain supplementary regs: "Service A
- * (Newport Speedway) 60"), so Out = In + 60. */
-const SERVICE_OUT_MINS = 60;
+/** In→Out duration per service stop, from the Overmountain stage schedule: Service A =
+ * 60 min (both days), Service B = 30 min (National) / 50 min (Regional). We use the
+ * National 30-min figure for the final stop as a sane default. */
+const SERVICE_DURATION_MINS: Record<number, number> = { 1: 60, 2: 60, 3: 30 };
 
 /** Add minutes to a combiner local-wall-time ISO string (mislabeled "Z") so the "out" time
  * can be shown next to the "in" time. */
@@ -608,7 +608,7 @@ export function ResultsDesktop() {
                                 In: {formatLocalIsoAsIs(s.due)}
                               </div>
                               <div className="font-mono text-sm text-neutral-300">
-                                Out: {formatLocalIsoAsIs(addMinutesToLocalIso(s.due, SERVICE_OUT_MINS))}
+                                Out: {formatLocalIsoAsIs(addMinutesToLocalIso(s.due, SERVICE_DURATION_MINS[s.serviceNumber] ?? 30))}
                               </div>
                             </div>
                           );
