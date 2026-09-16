@@ -207,4 +207,36 @@ html {
 .bg-brand-maroon { color: var(--brand-on-maroon) !important; }
 .bg-brand-ink { color: #ffffff !important; }
 
+/* Keyboard focus: a clear gold outline for tabbing through links/buttons/inputs. */
+:focus-visible {
+  outline: 2px solid var(--brand-gold);
+  outline-offset: 2px;
+}
+
+/* Selected text in the brand ink-on-gold palette. */
+::selection {
+  background: var(--brand-gold);
+  color: var(--brand-ink);
+}
+
+/* Thin, theme-matched scrollbars for the dark UI (list panels, inbox, tables). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(213, 160, 33, 0.6);
+}
+
 

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { getDeviceId, getSavedPhone, savePhoneLocally, hasSmsConsent, saveSmsConsentLocally, getLastEventId, saveLastEventId } from "@/lib/device";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { Skeleton } from "@/components/Skeleton";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { SmsConsentModal } from "@/components/home/SmsConsentModal";
 
@@ -546,7 +547,7 @@ export function HomeDesktop() {
             </h2>
           </div>
           {loadingEvents ? (
-            <p className="text-white/70 text-sm">Loading events…</p>
+            <Skeleton className="h-11 w-full" />
           ) : events.length === 0 ? (
             <p className="text-white/70 text-sm">No live/upcoming events found right now.</p>
           ) : (
@@ -627,7 +628,17 @@ export function HomeDesktop() {
                     />
                   </div>
                   {loadingEntries ? (
-                    <p className="text-neutral-500 text-sm p-4">Loading entries…</p>
+                    <div className="p-4 space-y-3">
+                      {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-3 w-2/3" />
+                            <Skeleton className="h-3 w-1/3" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   ) : (
                     <div className="divide-y divide-white/5 max-h-[55vh] overflow-y-auto">
                       {filteredAvailable.map((entry) => (
