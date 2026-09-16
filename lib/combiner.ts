@@ -202,7 +202,7 @@ export interface OverallStanding {
   /** Net penalty seconds: positive = time added (bad), negative = time reduced on appeal (good).
    * Zero when isPenalized is false. */
   penaltySecondsNet: number;
-  board?: "national" | "regional";
+  board?: "national" | "regional" | "stryker";
 }
 
 /** Overall from live combiner: times + penalties; cancelled stages stay numbered but add no time. */
@@ -212,10 +212,6 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
   const stagesTotal = data.stages.length;
 
   for (const entry of data.entries) {
-    // STRYKER Challenge is a separate support series, excluded from the national/regional
-    // overall classification (matches how sneakattackrally.com itself separates it out).
-    if (/stryker/i.test(entry.category ?? "")) continue;
-
     const timesMs = data.stages.map((_, y) => parseTimeToMs(entry.times[y] ?? ""));
     const scored = accumulateOverall(
       data.stages.map((s) => s.status || ""),
@@ -239,9 +235,13 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
     // from floating to the top of the leaderboard.
     const isRetired = (entry.retirements ?? []).length > 0 || Boolean(scored?.stopped);
 
-    const board: "national" | "regional" = /^national$/i.test(entry.category ?? "")
+    // STRYKER Challenge is its own support series, ranked separately from National and
+    // Regional (matches how sneakattackrally.com splits them into three boards).
+    const board: "national" | "regional" | "stryker" = /^national$/i.test(entry.category ?? "")
       ? "national"
-      : "regional";
+      : /stryker/i.test(entry.category ?? "")
+        ? "stryker"
+        : "regional";
 
     rows.push({
       position: 0,
@@ -264,7 +264,8 @@ export async function computeOverallStandings(data: CombinerData): Promise<Overa
 
   const national = rankByFieldDistance(rows.filter((r) => r.board === "national"));
   const regional = rankByFieldDistance(rows.filter((r) => r.board === "regional"));
-  return [...national, ...regional];
+  const stryker = rankByFieldDistance(rows.filter((r) => r.board === "stryker"));
+  return [...national, ...regional, ...stryker];
 }
 
 // ---------------------------------------------------------------------------
@@ -279,11 +280,23 @@ export interface ServiceEstimateForCar {
   durationMins?: number;
 }
 
-// Service In→Out duration per stop, from the Overmountain stage schedule (bulletin
-// itinerary V2): Service A = 60 min (both days), Service B = 30 min (National) / 50 min
-// (Regional). The combiner only publishes the arrival ("due") time, so we use the
-// National 30-min figure for the final stop as a sane default.
+// Service In→Out duration per stop. This is the fallback when no event config is set —
+// the real values should be pasted on the dev page (event config) from the event's
+// bulletin schedule (e.g. "60,60,30"). Overmountain default: Service A = 60, Service B = 30.
 const SERVICE_DURATION_MINS: Record<number, number> = { 1: 60, 2: 60, 3: 30 };
+
+async function serviceDurations(): Promise<Record<number, number>> {
+  const { getEventConfig } = await import("@/lib/sportity");
+  const csv = (await getEventConfig()).serviceDurationsCsv;
+  if (!csv) return SERVICE_DURATION_MINS;
+  const parts = csv.split(",").map((s) => Number(s.trim()));
+  if (!parts.length || parts.some((n) => !Number.isFinite(n) || n <= 0)) return SERVICE_DURATION_MINS;
+  const out: Record<number, number> = {};
+  parts.forEach((mins, i) => {
+    out[i + 1] = mins;
+  });
+  return out;
+}
 
 /** Look up an event's display name from its live-tracking eventId (cached). */
 export async function eventNameForId(eventId: number): Promise<string> {
@@ -311,13 +324,14 @@ export async function serviceEstimatesForCar(
   const data = await findCombinerEventByName(eventName);
   if (!data) return null;
   const num = Number(carNumber);
+  const durations = await serviceDurations();
   const list = (data.serviceIn ?? [])
     .filter((s) => s.number === num)
     .sort((a, b) => a.serviceNumber - b.serviceNumber)
     .map((s) => ({
       serviceNumber: s.serviceNumber,
       due: s.due,
-      durationMins: SERVICE_DURATION_MINS[s.serviceNumber] ?? 30,
+      durationMins: durations[s.serviceNumber] ?? 30,
     }));
   return list.length ? list : null;
 }

@@ -81,6 +81,7 @@ export function DevConsole() {
     overall: { standings: { number: number; driverName: string; totalMs: number; isRetired: boolean }[]; stages: { name: string; status: string }[] };
     irregularities: { t: number; severity: string; source: string; message: string }[];
     itinerary?: Stage[];
+    config?: { bulletinUrl?: string; serviceDurationsCsv?: string };
   } | null>(null);
   const [missing, setMissing] = useState(false);
   const [health, setHealth] = useState("");
@@ -89,6 +90,8 @@ export function DevConsole() {
   const [note, setNote] = useState("");
   const [edit, setEdit] = useState<Record<string, { username: string; email: string; phone: string; password: string }>>({});
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
+  const [bulletinUrl, setBulletinUrl] = useState("");
+  const [serviceDurationsCsv, setServiceDurationsCsv] = useState("");
 
   const [fail, setFail] = useState("");
 
@@ -117,6 +120,8 @@ export function DevConsole() {
         }
         setFail("");
         setData(d);
+        setBulletinUrl(d.config?.bulletinUrl ?? "");
+        setServiceDurationsCsv(d.config?.serviceDurationsCsv ?? "");
         setGamble((d.users as UserRow[]).filter((u) => u.can_gamble).map((u) => u.id));
       })
       .catch((e) => setFail(String(e)));
@@ -278,6 +283,32 @@ export function DevConsole() {
               );
             })}
           </div>
+        </section>
+
+        <section className="rounded-xl border border-white/10 bg-[#11151c] p-4 space-y-3">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Event config — bulletin + service times</div>
+          <p className="text-xs text-neutral-400">
+            Paste the Sportity bulletin URL for the live event (drives the bulletin scanner and Telegram
+            alerts). Then paste the service durations from the schedule, comma-separated — e.g.
+            <span className="text-brand-gold font-mono">60,60,30</span> = service 1: 60min, 2: 60min, 3: 30min.
+          </p>
+          <input
+            className="w-full bg-[#0a0e14] border border-white/10 rounded px-3 py-2 text-base"
+            value={bulletinUrl}
+            onChange={(e) => setBulletinUrl(e.target.value)}
+            placeholder="Bulletin URL (Sportity)"
+          />
+          <input
+            className="w-full bg-[#0a0e14] border border-white/10 rounded px-3 py-2 text-base"
+            value={serviceDurationsCsv}
+            onChange={(e) => setServiceDurationsCsv(e.target.value)}
+            placeholder="Service durations, e.g. 60,60,30"
+          />
+          <Tap
+            gold
+            label="Save event config"
+            onClick={() => post({ action: "event-config", bulletinUrl, serviceDurationsCsv })}
+          />
         </section>
 
         <section className="rounded-xl border border-white/10 bg-[#11151c] p-4 space-y-3">

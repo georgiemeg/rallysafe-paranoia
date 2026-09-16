@@ -5,6 +5,7 @@ import { ensureUserSchema, getPool } from "@/lib/db";
 import { normalizePhone, normalizeUsername, validEmail, validUsername } from "@/lib/auth";
 import { getSimState, listIrregularities, runSimScript, setSimState, simInject, simOverall, crewForCar, entryIdForCar, fireSimTick, advancePlayback, trackSnapshot, applyIncident, skipOvernight, panicStop, simElapsed, resumePlayback } from "@/lib/sim/engine";
 import { TEST_EVENT_ID, TEST_EVENT_NAME } from "@/lib/sim/ids";
+import { getEventConfig, setEventConfig } from "@/lib/sportity";
 import itinerary from "@/lib/sim/seed/itinerary.json";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export async function GET() {
       irregularities: irr,
       itinerary,
       track: trackSnapshot(sim),
+      config: await getEventConfig(),
     });
   } catch (err) {
     console.error(err);
@@ -202,6 +204,13 @@ export async function POST(req: NextRequest) {
     await getPool().query(`DELETE FROM change_requests WHERE user_id = $1`, [id]);
     await getPool().query(`DELETE FROM users WHERE id = $1`, [id]);
     return NextResponse.json({ ok: true });
+  }
+  if (body.action === "event-config") {
+    const patch: { bulletinUrl?: string; serviceDurationsCsv?: string } = {};
+    if (typeof body.bulletinUrl === "string") patch.bulletinUrl = body.bulletinUrl.trim();
+    if (typeof body.serviceDurationsCsv === "string") patch.serviceDurationsCsv = body.serviceDurationsCsv.trim();
+    const config = await setEventConfig(patch);
+    return NextResponse.json({ ok: true, config });
   }
   return NextResponse.json({ error: "Bad request" }, { status: 400 });
 }

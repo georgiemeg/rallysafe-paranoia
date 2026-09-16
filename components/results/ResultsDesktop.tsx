@@ -31,7 +31,7 @@ interface OverallStanding {
   isRetired: boolean;
   isPenalized: boolean;
   penaltySecondsNet: number;
-  board?: "national" | "regional";
+  board?: "national" | "regional" | "stryker";
   ewrcDriverId?: number | null;
   ewrcCodriverId?: number | null;
   ewrcEntryId?: number;
@@ -65,6 +65,7 @@ interface OverallResponse {
   retirements?: { carNumber: number; driverName: string; codriverName: string; stageNumber: number | null; reason: string }[];
   penalties?: { carNumber: number; driverName: string; stageNumber: number | null; penaltyPretty: string; reason: string }[];
   derivedServiceTimes?: { carNumber: number; serviceName: string; inTime: string; outTime: string; basis: string }[];
+  serviceDurationsCsv?: string;
   source?: "ewrc" | "combiner" | "fallback";
   hasAnyIncompleteData?: boolean;
 }
@@ -101,10 +102,20 @@ function formatLocalIsoAsIs(iso: string): string {
   return `${weekday} ${h12}:${minute} ${ampm}`;
 }
 
-/** In→Out duration per service stop, from the Overmountain stage schedule: Service A =
- * 60 min (both days), Service B = 30 min (National) / 50 min (Regional). We use the
- * National 30-min figure for the final stop as a sane default. */
+/** In→Out duration per service stop. Falls back to the Overmountain default unless the
+ * event config (pasted on the dev page) supplies a comma-separated list. */
 const SERVICE_DURATION_MINS: Record<number, number> = { 1: 60, 2: 60, 3: 30 };
+
+function parseServiceDurations(csv?: string): Record<number, number> {
+  if (!csv) return SERVICE_DURATION_MINS;
+  const parts = csv.split(",").map((s) => Number(s.trim()));
+  if (!parts.length || parts.some((n) => !Number.isFinite(n) || n <= 0)) return SERVICE_DURATION_MINS;
+  const out: Record<number, number> = {};
+  parts.forEach((mins, i) => {
+    out[i + 1] = mins;
+  });
+  return out;
+}
 
 /** Add minutes to a combiner local-wall-time ISO string (mislabeled "Z") so the "out" time
  * can be shown next to the "in" time. */
@@ -459,8 +470,9 @@ export function ResultsDesktop() {
               {(() => {
                 const national = overall.standings.filter((r) => r.board === "national");
                 const regional = overall.standings.filter((r) => r.board === "regional");
-                const split = national.length > 0 && regional.length > 0;
-                if (!split) {
+                const stryker = overall.standings.filter((r) => r.board === "stryker");
+                const boardCount = (national.length > 0 ? 1 : 0) + (regional.length > 0 ? 1 : 0) + (stryker.length > 0 ? 1 : 0);
+                if (boardCount <= 1) {
                   return (
                     <StandingsBoard
                       rows={overall.standings}
@@ -475,26 +487,42 @@ export function ResultsDesktop() {
                 }
                 return (
                   <>
-                    <StandingsBoard
-                      title="National"
-                      rows={national}
-                      serviceCarNumber={serviceCarNumber}
-                      compareB={compareB}
-                      onRowClick={handleRowClick}
-                      onRowContext={handleRowContext}
-                      onRowDouble={handleRowDouble}
-                      extended={useEwrc}
-                    />
-                    <StandingsBoard
-                      title="Regional"
-                      rows={regional}
-                      serviceCarNumber={serviceCarNumber}
-                      compareB={compareB}
-                      onRowClick={handleRowClick}
-                      onRowContext={handleRowContext}
-                      onRowDouble={handleRowDouble}
-                      extended={useEwrc}
-                    />
+                    {national.length > 0 && (
+                      <StandingsBoard
+                        title="National"
+                        rows={national}
+                        serviceCarNumber={serviceCarNumber}
+                        compareB={compareB}
+                        onRowClick={handleRowClick}
+                        onRowContext={handleRowContext}
+                        onRowDouble={handleRowDouble}
+                        extended={useEwrc}
+                      />
+                    )}
+                    {regional.length > 0 && (
+                      <StandingsBoard
+                        title="Regional"
+                        rows={regional}
+                        serviceCarNumber={serviceCarNumber}
+                        compareB={compareB}
+                        onRowClick={handleRowClick}
+                        onRowContext={handleRowContext}
+                        onRowDouble={handleRowDouble}
+                        extended={useEwrc}
+                      />
+                    )}
+                    {stryker.length > 0 && (
+                      <StandingsBoard
+                        title="STRYKER Challenge"
+                        rows={stryker}
+                        serviceCarNumber={serviceCarNumber}
+                        compareB={compareB}
+                        onRowClick={handleRowClick}
+                        onRowContext={handleRowContext}
+                        onRowDouble={handleRowDouble}
+                        extended={useEwrc}
+                      />
+                    )}
                   </>
                 );
               })()}
@@ -599,6 +627,7 @@ export function ResultsDesktop() {
                     return (
                       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
                         {entries.map((s) => {
+                          const durations = parseServiceDurations(overall.serviceDurationsCsv);
                           return (
                             <div key={s.serviceNumber} className="bg-black/40 border border-white/5 rounded-xl p-3">
                               <div className="text-xs text-neutral-500 font-mono uppercase mb-1">
@@ -608,7 +637,7 @@ export function ResultsDesktop() {
                                 In: {formatLocalIsoAsIs(s.due)}
                               </div>
                               <div className="font-mono text-sm text-neutral-300">
-                                Out: {formatLocalIsoAsIs(addMinutesToLocalIso(s.due, SERVICE_DURATION_MINS[s.serviceNumber] ?? 30))}
+                                Out: {formatLocalIsoAsIs(addMinutesToLocalIso(s.due, durations[s.serviceNumber] ?? 30))}
                               </div>
                             </div>
                           );

@@ -10,6 +10,30 @@ const SPORTITY_URL =
   "https://webapp.sportity.com/event/OVRMTN2026/1f16be91-de1f-43e4-adf3-f8c848ebec7f";
 
 const SEEN_KEY = "sportity:seen";
+const CONFIG_KEY = "event-config";
+
+export interface EventConfig {
+  /** Sportity bulletin page URL for the current event. */
+  bulletinUrl?: string;
+  /** Comma-separated service durations, e.g. "60,60,30" = service 1: 60min, 2: 60min, 3: 30min. */
+  serviceDurationsCsv?: string;
+}
+
+export async function getEventConfig(): Promise<EventConfig> {
+  return (await redis.get<EventConfig>(CONFIG_KEY)) ?? {};
+}
+
+export async function setEventConfig(patch: Partial<EventConfig>): Promise<EventConfig> {
+  const cur = await getEventConfig();
+  const next = { ...cur, ...patch };
+  await redis.set(CONFIG_KEY, next);
+  return next;
+}
+
+export async function getBulletinUrl(): Promise<string> {
+  const cfg = await getEventConfig();
+  return cfg.bulletinUrl || process.env.SPORTITY_BULLETIN_URL || SPORTITY_URL;
+}
 
 export interface SportityDoc {
   url: string;
@@ -20,7 +44,7 @@ export interface SportityDoc {
 /** Fetches the Sportity bulletin page (plain server-rendered HTML, no auth) and parses
  * out every linked PDF document with its title and published date. */
 export async function scanSportityBulletin(): Promise<SportityDoc[]> {
-  const res = await fetch(SPORTITY_URL, { cache: "no-store" });
+  const res = await fetch(await getBulletinUrl(), { cache: "no-store" });
   if (!res.ok) throw new Error(`Sportity fetch failed: ${res.status}`);
   const html = await res.text();
 
