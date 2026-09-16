@@ -38,7 +38,7 @@ export default function TermsPage() {
         <p>These terms may change as the tool changes. Continued use after a change means you accept the update.</p>
 
         <p className="pt-4">
-          <Link href="/text-signup" className="underline text-brand-gold">
+          <Link href="/" className="underline text-brand-gold">
             Back to sign up
           </Link>
         </p>

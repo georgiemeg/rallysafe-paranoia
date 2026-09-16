@@ -51,7 +51,7 @@ export default function PrivacyPage() {
         </p>
 
         <p className="pt-4">
-          <Link href="/text-signup" className="underline text-brand-gold">
+          <Link href="/" className="underline text-brand-gold">
             Back to sign up
           </Link>
         </p>
