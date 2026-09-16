@@ -97,7 +97,7 @@ export function DevConsole() {
 
   const [fail, setFail] = useState("");
 
-  const load = () =>
+  const load = (resetForm = true) =>
     fetch("/api/dev", { credentials: "include" })
       .then((r) => {
         if (r.status === 404) {
@@ -122,11 +122,16 @@ export function DevConsole() {
         }
         setFail("");
         setData(d);
-        const active = (d.configs ?? []).find((c: { name: string }) => c.name === d.activeConfigName);
-        setConfigName(d.activeConfigName ?? "");
-        setBulletinUrl(active?.bulletinUrl ?? "");
-        setServiceDurationsCsv(active?.serviceDurationsCsv ?? "");
-        setGamble((d.users as UserRow[]).filter((u) => u.can_gamble).map((u) => u.id));
+        // Only reset the editable form state on a full reload (initial load / after a save),
+        // NOT on the every-second sim auto-tick — otherwise typing into the config box or
+        // toggling the gamble list gets wiped a second later.
+        if (resetForm) {
+          const active = (d.configs ?? []).find((c: { name: string }) => c.name === d.activeConfigName);
+          setConfigName(d.activeConfigName ?? "");
+          setBulletinUrl(active?.bulletinUrl ?? "");
+          setServiceDurationsCsv(active?.serviceDurationsCsv ?? "");
+          setGamble((d.users as UserRow[]).filter((u) => u.can_gamble).map((u) => u.id));
+        }
       })
       .catch((e) => setFail(String(e)));
 
@@ -145,7 +150,7 @@ export function DevConsole() {
       while (!stop) {
         try {
           await fetch("/api/dev", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "tick" }) });
-          if (!stop) await load();
+          if (!stop) await load(false);
         } catch {
           /* ignore */
         }
