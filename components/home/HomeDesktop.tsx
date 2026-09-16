@@ -768,16 +768,23 @@ export function HomeDesktop() {
               </div>
             </section>
 
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="save-btn w-full bg-brand-gold hover:bg-brand-gold/90 disabled:opacity-50 text-brand-ink font-bold rounded-full py-4 uppercase tracking-wider text-sm shadow-[0_0_30px_rgba(213,160,33,0.25)]"
-            >
-              <span className="save-btn__label">{saving ? "Saving…" : "Save & Start Tracking"}</span>
-            </button>
-            {saveMessage && (
-              <p className="text-center text-sm mt-2 text-neutral-100">{saveMessage}</p>
-            )}
+            <div className="sticky bottom-0 z-30 pt-4 pb-3 -mx-3 sm:-mx-6 px-3 sm:px-6 bg-gradient-to-t from-[#0a0e14] via-[#0a0e14]/95 to-transparent">
+              {tracked.size > 0 && (
+                <p className="mb-2 text-center text-[11px] font-mono uppercase tracking-widest text-neutral-400">
+                  <span className="text-brand-gold">{tracked.size}</span> car(s) armed
+                </p>
+              )}
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="save-btn w-full bg-brand-gold hover:bg-brand-gold/90 disabled:opacity-50 text-brand-ink font-bold rounded-full py-4 uppercase tracking-wider text-sm shadow-[0_0_30px_rgba(213,160,33,0.25)]"
+              >
+                <span className="save-btn__label">{saving ? "Saving…" : "Save & Start Tracking"}</span>
+              </button>
+              {saveMessage && (
+                <p className="text-center text-sm mt-2 text-neutral-100">{saveMessage}</p>
+              )}
+            </div>
 
             <p className="text-center text-xs text-neutral-500 mt-4">
               Once saved, text HELP to the alert number for ad-hoc commands (overall time check,

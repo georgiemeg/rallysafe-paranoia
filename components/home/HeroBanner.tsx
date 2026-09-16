@@ -15,7 +15,7 @@ export function HeroBanner() {
     <div className="relative overflow-hidden bg-brand-gold text-brand-ink">
       <div className="flex items-stretch">
         <div
-          className="min-w-0 flex-1 py-8 sm:py-12 pr-4 sm:pr-6"
+          className="min-w-0 flex-1 py-5 sm:py-12 pr-4 sm:pr-6"
           style={{
             paddingLeft:
               "max(1rem, calc((100vw - min(72rem, 100vw)) / 2 + 0.25rem + 1.35rem))",
