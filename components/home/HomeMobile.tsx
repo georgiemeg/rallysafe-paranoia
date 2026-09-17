@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import { getDeviceId, getSavedPhone, savePhoneLocally, hasSmsConsent, saveSmsConsentLocally, getLastEventId, saveLastEventId } from "@/lib/device";
 import { InfoTooltip } from "@/components/InfoTooltip";
@@ -165,6 +166,7 @@ export function HomeMobile() {
   const [inboxFullscreen, setInboxFullscreen] = useState(false);
   const [commandText, setCommandText] = useState("");
   const [commandBusy, setCommandBusy] = useState(false);
+  const [smsConsentChecked, setSmsConsentChecked] = useState(() => hasSmsConsent());
   const [vv, setVv] = useState({ h: 0, top: 0 });
 
   useEffect(() => {
@@ -384,6 +386,7 @@ export function HomeMobile() {
         }
       } else {
         saveSmsConsentLocally();
+        setSmsConsentChecked(true);
         savePhoneLocally(data.phone);
         saveLastEventId(selectedEvent.eventId);
         setPhone(data.phone);
@@ -450,6 +453,7 @@ export function HomeMobile() {
         }
       } else if (data.sms) {
         saveSmsConsentLocally();
+        setSmsConsentChecked(true);
         savePhoneLocally(data.phone);
         setPhone(data.phone);
         setTestMessage("Test text sent. Check your phone, and the in-app box if you have it open.");
@@ -468,9 +472,9 @@ export function HomeMobile() {
   };
 
   const requireConsent = (action: "save" | "test") => {
-    if (hasSmsConsent()) {
-      if (action === "save") void performSave(false);
-      else void performTestText(false);
+    if (hasSmsConsent() || smsConsentChecked) {
+      if (action === "save") void performSave(smsConsentChecked);
+      else void performTestText(smsConsentChecked);
       return;
     }
     setPendingConsentAction(action);
@@ -611,6 +615,23 @@ export function HomeMobile() {
               <p className="text-xs text-white/80 mt-1.5">
                 Saved to this device, so you won&apos;t need to re-enter it next time.
               </p>
+              <label className="mt-3 flex items-start gap-2.5 cursor-pointer max-w-sm">
+                <input
+                  type="checkbox"
+                  checked={smsConsentChecked}
+                  onChange={(e) => setSmsConsentChecked(e.target.checked)}
+                  className="mt-0.5 w-5 h-5 shrink-0 accent-brand-gold"
+                />
+                <span className="text-xs text-white/90 leading-snug">
+                  By checking this box, I agree to receive recurring automated text messages from{" "}
+                  <span className="font-semibold text-white">RallySafe Paranoia</span> with rally
+                  stage-time, service, and incident alerts for the cars I track. Message frequency
+                  varies. Message and data rates may apply. Reply HELP for help or STOP to cancel.{" "}
+                  <Link href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</Link>
+                  {" · "}
+                  <Link href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy</Link>
+                </span>
+              </label>
               <button
                 type="button"
                 onClick={handleTestText}
