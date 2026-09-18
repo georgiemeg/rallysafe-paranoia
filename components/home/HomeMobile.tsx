@@ -164,6 +164,7 @@ export function HomeMobile() {
   const [showInbox, setShowInbox] = useState(false);
   const [inbox, setInbox] = useState<InboxMsg[]>([]);
   const [inboxFullscreen, setInboxFullscreen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const [commandText, setCommandText] = useState("");
   const [commandBusy, setCommandBusy] = useState(false);
   const [smsConsentChecked, setSmsConsentChecked] = useState(() => hasSmsConsent());
@@ -282,6 +283,17 @@ export function HomeMobile() {
       setInbox(data.messages ?? []);
     } catch {
       /* keep last list */
+    }
+  }, [deviceId]);
+
+  const clearInbox = useCallback(async () => {
+    if (!deviceId) return;
+    try {
+      await fetch(`/api/inbox?deviceId=${encodeURIComponent(deviceId)}`, { method: "DELETE" });
+      setInbox([]);
+      setConfirmClear(false);
+    } catch {
+      /* keep list on failure */
     }
   }, [deviceId]);
 
@@ -882,13 +894,35 @@ export function HomeMobile() {
                   <span className="text-xs font-mono uppercase tracking-widest text-brand-gold">
                     In-app alerts
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setInboxFullscreen((v) => !v)}
-                    className="text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white border border-white/15 rounded-full px-3 py-1.5"
-                  >
-                    {inboxFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {inbox.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirmClear) {
+                            void clearInbox();
+                          } else {
+                            setConfirmClear(true);
+                            setTimeout(() => setConfirmClear(false), 3000);
+                          }
+                        }}
+                        className={`text-xs font-mono uppercase tracking-widest rounded-full px-3 py-1.5 border ${
+                          confirmClear
+                            ? "bg-brand-maroon border-brand-maroon text-white font-bold"
+                            : "text-neutral-400 hover:text-white border-white/15"
+                        }`}
+                      >
+                        {confirmClear ? "Confirm clear" : "Clear"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setInboxFullscreen((v) => !v)}
+                      className="text-xs font-mono uppercase tracking-widest text-neutral-300 hover:text-white border border-white/15 rounded-full px-3 py-1.5"
+                    >
+                      {inboxFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                    </button>
+                  </div>
                 </div>
                 <div
                   className={`min-h-0 overflow-y-auto overscroll-contain divide-y divide-white/5 ${

@@ -111,6 +111,11 @@ export async function listInbox(deviceId: string): Promise<InboxMessage[]> {
   return (items ?? []).filter(Boolean);
 }
 
+/** Empties a device's entire in-app inbox (deletes the list key outright). */
+export async function clearInbox(deviceId: string): Promise<void> {
+  await redis.del(k.inbox(deviceId));
+}
+
 export async function saveDevice(profile: DeviceProfile) {
   await redis.set(k.device(profile.deviceId), profile);
   await indexPhone(profile.phone, profile.deviceId);
