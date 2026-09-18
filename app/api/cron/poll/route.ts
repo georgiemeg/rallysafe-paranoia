@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getActiveEventIds } from "@/lib/store";
+import { getActiveEventIds, isSystemPaused } from "@/lib/store";
 import { processWatchedEvent } from "@/lib/rally-poll";
 import { TEST_EVENT_ID } from "@/lib/sim/ids";
 
@@ -17,6 +17,10 @@ function cronAuthorized(req: NextRequest) {
 export async function GET(req: NextRequest) {
   if (!cronAuthorized(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  if (await isSystemPaused()) {
+    return NextResponse.json({ ok: true, paused: true });
   }
 
   const results: Record<string, unknown>[] = [];

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { scanAndNotifySportity } from "@/lib/sportity";
+import { isSystemPaused } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -18,6 +19,9 @@ function authorized(req: NextRequest): boolean {
 export async function GET(req: NextRequest) {
   if (!authorized(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  if (await isSystemPaused()) {
+    return NextResponse.json({ ok: true, paused: true });
   }
   try {
     const { newDocs, total } = await scanAndNotifySportity();

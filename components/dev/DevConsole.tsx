@@ -83,6 +83,7 @@ export function DevConsole() {
     itinerary?: Stage[];
     configs?: { name: string; bulletinUrl?: string; serviceDurationsCsv?: string; updatedAt: number }[];
     activeConfigName?: string | null;
+    paused?: boolean;
   } | null>(null);
   const [missing, setMissing] = useState(false);
   const [health, setHealth] = useState("");
@@ -191,6 +192,25 @@ export function DevConsole() {
       </div>
       <div className="max-w-6xl mx-auto p-4 space-y-4">
         {note && <div className="sticky top-2 z-20 rounded-xl bg-brand-gold text-brand-ink px-4 py-2 text-sm font-mono">{note}</div>}
+
+        <section className={`rounded-xl border p-4 flex flex-wrap items-center justify-between gap-3 ${data.paused ? "border-brand-gold/60 bg-brand-gold/10" : "border-white/10 bg-[#11151c]"}`}>
+          <div>
+            <div className="text-sm font-mono uppercase tracking-widest text-brand-gold">
+              {data.paused ? "⏸ Background CPU paused" : "Background CPU active"}
+            </div>
+            <div className="text-xs text-neutral-400 mt-1 max-w-xl">
+              Pauses the minute-by-minute poller, the simulator tick, and the Sportity scanner so the app stops
+              burning Vercel Fluid compute. Normal pages and live tracking still work when you open them.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => post({ action: "setPaused", paused: !data.paused })}
+            className={`rounded-full px-5 py-2.5 text-xs font-mono uppercase tracking-widest font-bold active:scale-95 ${data.paused ? "bg-brand-gold text-brand-ink" : "bg-red-600 text-white"}`}
+          >
+            {data.paused ? "Resume polling" : "Pause polling"}
+          </button>
+        </section>
 
         <section className="rounded-xl border border-white/10 bg-[#11151c] p-4 space-y-3">
           <div className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Oregon Trail 2025 — fake RallySafe packets</div>

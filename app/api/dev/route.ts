@@ -6,6 +6,7 @@ import { normalizePhone, normalizeUsername, validEmail, validUsername } from "@/
 import { getSimState, listIrregularities, runSimScript, setSimState, simInject, simOverall, crewForCar, entryIdForCar, fireSimTick, advancePlayback, trackSnapshot, applyIncident, skipOvernight, panicStop, simElapsed, resumePlayback } from "@/lib/sim/engine";
 import { TEST_EVENT_ID, TEST_EVENT_NAME } from "@/lib/sim/ids";
 import { listEventConfigs, saveEventConfig, setActiveEventConfig, getActiveEventConfig } from "@/lib/sportity";
+import { isSystemPaused, setSystemPaused } from "@/lib/store";
 import itinerary from "@/lib/sim/seed/itinerary.json";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export async function GET() {
       track: trackSnapshot(sim),
       configs: await listEventConfigs(),
       activeConfigName: (await getActiveEventConfig())?.name ?? null,
+      paused: await isSystemPaused(),
     });
   } catch (err) {
     console.error(err);
@@ -221,6 +223,17 @@ export async function POST(req: NextRequest) {
     if (!name) return NextResponse.json({ error: "Missing config name." }, { status: 400 });
     await setActiveEventConfig(name);
     return NextResponse.json({ ok: true, active: name });
+  }
+  if (body.action === "setPaused") {
+    const paused = Boolean(body.paused);
+    await setSystemPaused(paused);
+    return NextResponse.json({
+      ok: true,
+      paused,
+      note: paused
+        ? "Background CPU paused — poller, simulator tick, and Sportity scanner are now idle."
+        : "Background CPU resumed — polling is active again.",
+    });
   }
   return NextResponse.json({ error: "Bad request" }, { status: 400 });
 }

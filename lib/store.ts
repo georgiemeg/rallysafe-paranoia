@@ -262,6 +262,20 @@ export async function getActiveEventIds(): Promise<number[]> {
   return ((await redis.smembers(k.activeEvents)) as string[]).map(Number);
 }
 
+const SYSTEM_PAUSED_KEY = "system:paused";
+
+/** Global kill switch for background CPU (cron poller, simulator tick, Sportity scanner).
+ * Toggled from the owner Dev Tools. While paused the cron endpoints return immediately
+ * without doing any work, so the app burns ~zero Vercel Fluid compute. */
+export async function isSystemPaused(): Promise<boolean> {
+  return (await redis.get<string>(SYSTEM_PAUSED_KEY)) === "1";
+}
+
+export async function setSystemPaused(paused: boolean): Promise<void> {
+  if (paused) await redis.set(SYSTEM_PAUSED_KEY, "1");
+  else await redis.del(SYSTEM_PAUSED_KEY);
+}
+
 export async function getWatchedEntryIds(eventId: number): Promise<number[]> {
   return ((await redis.smembers(k.watchedEntries(eventId))) as string[]).map(Number);
 }
