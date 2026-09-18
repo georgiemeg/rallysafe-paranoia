@@ -1,4 +1,5 @@
-import { getEntries } from "@/lib/rallysafe";
+import { getEntries, listStages } from "@/lib/rallysafe";
+import { getStageTimes as getRcStageTimes } from "@/lib/rallysafe-rc-overall";
 import {
   getWatchedEntryIds,
   getLiveState,
@@ -71,6 +72,34 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
     return results;
   }
   const byEntryId = new Map(entries.map((e) => [e.entryId, e]));
+
+  // Overmountain 2026 (and a few other events) never populate the per-car stageNumber in the
+  // live entry feed — every car reports 0. The alert pipeline keys stage detection off that
+  // field, so without this fallback nothing ever fires. The rc times feed DOES update, so we
+  // scan each scored stage once per poll and map car number -> posted time, then use that in
+  // the per-entry loop below to discover finished stages.
+  const liveHasStageNumbers = entries.some((e) => (e.stageNumber ?? 0) > 0);
+  const rcStageTimes = new Map<number, Map<string, number>>(); // stageNumber -> car -> timeMs
+  const rcStageNames = new Map<number, string>();
+  if (eventId !== 20251925 && !liveHasStageNumbers) {
+    try {
+      const stages = await listStages(eventId);
+      for (const s of stages) {
+        if (s.isTransit || (s.status !== 3 && s.status !== 4)) continue;
+        rcStageNames.set(s.number, s.name);
+        const times = await getRcStageTimes(s.locationGroupId);
+        const byCar = new Map<string, number>();
+        for (const t of times) {
+          if ((t.stageTime ?? 0) > 0 && /^\d+$/.test(String(t.identifier))) {
+            byCar.set(String(t.identifier), t.stageTime);
+          }
+        }
+        rcStageTimes.set(s.number, byCar);
+      }
+    } catch (err) {
+      console.error(`rc stage-times fallback scan failed for event ${eventId}`, err);
+    }
+  }
 
   for (const entryId of watchedEntryIds) {
     const subscriberIds = await getSubscribersForCar(eventId, entryId);
@@ -272,6 +301,27 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
       const timesSent = new Set(resultsState?.stageTimesSentForStage ?? []);
       const overallSent = new Set(resultsState?.overallSentForStage ?? []);
       const serviceSent = new Set(resultsState?.serviceSentForStage ?? []);
+
+      // Fallback for events whose live feed never advances stageNumber (Overmountain 2026
+      // reports stageNumber=0 for every car). The rc times feed DOES update, so we derive
+      // each car's reached stage and freshly-finished stages from it instead.
+      let feedReachedStage = 0;
+      const feedFinishedStages: number[] = [];
+      for (const [n, byCar] of rcStageTimes) {
+        if (!byCar.has(sub.carNumber)) continue;
+        if (n > feedReachedStage) feedReachedStage = n;
+        if (!timesSent.has(n)) feedFinishedStages.push(n);
+      }
+
+      if (sub.alerts.stageFinish) {
+        for (const n of feedFinishedStages) {
+          const claimed = await claimAlert(`alert:finish:${eventId}:${entryId}:${n}`);
+          if (!claimed) continue;
+          const stageName = rcStageNames.get(n) || (n ? `SS${n}` : "");
+          queue.push({ kind: "stageFinish", body: stageFinishMessage(sub, n, stageName) });
+        }
+      }
+
       const dueStages: number[] = [];
       if (justFinishedStage && finishedStageNumber) dueStages.push(finishedStageNumber);
       // Re-check every stage the car has reached so far, not just the one it just finished.
@@ -280,7 +330,7 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
       // post-stage times/overall alerts never went out). Retrying all reached stages every
       // poll — deduped by timesSent/overallSent/serviceSent — catches the time whenever it
       // lands.
-      const maxReachedStage = Math.max(currentStageNumber, prevStageNumber, 0);
+      const maxReachedStage = Math.max(currentStageNumber, prevStageNumber, feedReachedStage, 0);
       for (let n = 1; n <= maxReachedStage; n++) dueStages.push(n);
       if (eventId === 20251925) {
         const { getSimState } = await import("@/lib/sim/engine");

@@ -36,7 +36,10 @@ interface RSStageMeta {
 }
 export type { RSStageMeta };
 
-async function getStageTimes(stageId: number): Promise<RSStageTimeEntry[]> {
+/** Full field's stage times for one locationGroupId, straight from the rc.statusas.com
+ * feed. Exported so the poller's fallback can discover finished stages when the live
+ * entry feed reports stageNumber=0 (Overmountain 2026 does this). */
+export async function getStageTimes(stageId: number): Promise<RSStageTimeEntry[]> {
   return rsFetch<RSStageTimeEntry[]>(`/times/stage-times?stageId=${stageId}`);
 }
 
