@@ -19,6 +19,9 @@ export interface EventConfig {
   bulletinUrl?: string;
   /** Comma-separated service durations, e.g. "60,60,30" = service 1: 60min, 2: 60min, 3: 30min. */
   serviceDurationsCsv?: string;
+  /** Comma-separated stage numbers after which a service occurs, e.g. "2,7,10" means
+   * service 1 follows stage 2, service 2 follows stage 7, service 3 follows stage 10. */
+  serviceAfterStagesCsv?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -38,7 +41,7 @@ export async function getEventConfigByName(name: string): Promise<EventConfig | 
  * name = a brand new entry, leaving all previous events untouched. */
 export async function saveEventConfig(
   name: string,
-  patch: { bulletinUrl?: string; serviceDurationsCsv?: string }
+  patch: { bulletinUrl?: string; serviceDurationsCsv?: string; serviceAfterStagesCsv?: string }
 ): Promise<EventConfig> {
   const now = Date.now();
   const existing = await getEventConfigByName(name);
@@ -46,6 +49,7 @@ export async function saveEventConfig(
     name,
     bulletinUrl: patch.bulletinUrl ?? existing?.bulletinUrl ?? "",
     serviceDurationsCsv: patch.serviceDurationsCsv ?? existing?.serviceDurationsCsv ?? "",
+    serviceAfterStagesCsv: patch.serviceAfterStagesCsv ?? existing?.serviceAfterStagesCsv ?? "",
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -77,6 +81,17 @@ export async function getBulletinUrl(): Promise<string> {
 
 export async function getActiveServiceDurationsCsv(): Promise<string | undefined> {
   return (await getActiveEventConfig())?.serviceDurationsCsv;
+}
+
+/** Parsed list of stage numbers after which a service occurs, from the active config.
+ * Returns null when unset so callers can fall back to the old always-on behavior. */
+export async function getActiveServiceAfterStages(): Promise<number[] | null> {
+  const csv =
+    (await getActiveEventConfig())?.serviceAfterStagesCsv || process.env.SERVICE_AFTER_STAGES_CSV;
+  if (!csv) return null;
+  const parts = csv.split(",").map((s) => Number(s.trim()));
+  if (!parts.length || parts.some((n) => !Number.isFinite(n) || n <= 0)) return null;
+  return parts;
 }
 
 export interface SportityDoc {

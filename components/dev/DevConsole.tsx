@@ -81,7 +81,7 @@ export function DevConsole() {
     overall: { standings: { number: number; driverName: string; totalMs: number; isRetired: boolean }[]; stages: { name: string; status: string }[] };
     irregularities: { t: number; severity: string; source: string; message: string }[];
     itinerary?: Stage[];
-    configs?: { name: string; bulletinUrl?: string; serviceDurationsCsv?: string; updatedAt: number }[];
+    configs?: { name: string; bulletinUrl?: string; serviceDurationsCsv?: string; serviceAfterStagesCsv?: string; updatedAt: number }[];
     activeConfigName?: string | null;
     paused?: boolean;
   } | null>(null);
@@ -94,6 +94,7 @@ export function DevConsole() {
   const [showPass, setShowPass] = useState<Record<string, boolean>>({});
   const [bulletinUrl, setBulletinUrl] = useState("");
   const [serviceDurationsCsv, setServiceDurationsCsv] = useState("");
+  const [serviceAfterStagesCsv, setServiceAfterStagesCsv] = useState("");
   const [configName, setConfigName] = useState("");
 
   const [fail, setFail] = useState("");
@@ -131,6 +132,7 @@ export function DevConsole() {
           setConfigName(d.activeConfigName ?? "");
           setBulletinUrl(active?.bulletinUrl ?? "");
           setServiceDurationsCsv(active?.serviceDurationsCsv ?? "");
+          setServiceAfterStagesCsv(active?.serviceAfterStagesCsv ?? "");
           setGamble((d.users as UserRow[]).filter((u) => u.can_gamble).map((u) => u.id));
         }
       })
@@ -217,7 +219,7 @@ export function DevConsole() {
           <p className="text-sm text-neutral-400">
             Cursor after SS{data.sim.completed} · {data.sim.speed}x · SMS {data.sim.smsLive ? "ON" : "off"}.
             Start from MTC runs the whole National event. Panic freezes — Resume picks up from there.
-            Alerts are controlled from the home page's &ldquo;choose who to track&rdquo; section, same as any user.
+            Alerts are controlled from the home page&apos;s &ldquo;choose who to track&rdquo; section, same as any user.
           </p>
           {data.sim.playing && data.sim.playback && (
             <p className="text-sm text-brand-gold font-mono">
@@ -244,7 +246,7 @@ export function DevConsole() {
           </div>
           <p className="text-xs text-neutral-500">
             Gold cars are the ones fake packets/injects target. Last tap ({`#${data.sim.selectedCar}`}) is who packets hit.
-            To actually get alerts (SMS/inbox), select cars under &ldquo;choose who to track&rdquo; on the home page — that's the real
+            To actually get alerts (SMS/inbox), select cars under &ldquo;choose who to track&rdquo; on the home page — that&apos;s the real
             subscription list, same as any user.
           </p>
           <label className="flex items-center gap-2 text-sm">
@@ -339,10 +341,16 @@ export function DevConsole() {
             onChange={(e) => setServiceDurationsCsv(e.target.value)}
             placeholder="Service durations, e.g. 60,60,30"
           />
+          <input
+            className="w-full bg-[#0a0e14] border border-white/10 rounded px-3 py-2 text-base"
+            value={serviceAfterStagesCsv}
+            onChange={(e) => setServiceAfterStagesCsv(e.target.value)}
+            placeholder="Stages before service, e.g. 2,7,10"
+          />
           <Tap
             gold
             label="Save & activate"
-            onClick={() => post({ action: "event-config", name: configName, bulletinUrl, serviceDurationsCsv })}
+            onClick={() => post({ action: "event-config", name: configName, bulletinUrl, serviceDurationsCsv, serviceAfterStagesCsv })}
           />
 
           {(data.configs ?? []).length > 0 && (
@@ -361,6 +369,7 @@ export function DevConsole() {
                     setConfigName(c.name);
                     setBulletinUrl(c.bulletinUrl ?? "");
                     setServiceDurationsCsv(c.serviceDurationsCsv ?? "");
+                    setServiceAfterStagesCsv(c.serviceAfterStagesCsv ?? "");
                   }}
                 >
                   <div className="text-sm truncate">
@@ -368,7 +377,10 @@ export function DevConsole() {
                     {c.name === data.activeConfigName ? " · active" : ""}
                   </div>
                   <div className="text-[11px] text-neutral-500 truncate">
-                    {c.serviceDurationsCsv || "no durations"} · {new Date(c.updatedAt).toLocaleDateString()}
+                    {c.serviceDurationsCsv || "no durations"}
+                    {c.serviceAfterStagesCsv ? ` · after ${c.serviceAfterStagesCsv}` : ""}
+                    {" · "}
+                    {new Date(c.updatedAt).toLocaleDateString()}
                   </div>
                 </button>
                 {c.name !== data.activeConfigName && (

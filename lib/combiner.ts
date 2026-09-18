@@ -316,17 +316,20 @@ export async function eventNameForId(eventId: number): Promise<string> {
 
 const eventNameByIdCache = new Map<number, string>();
 
-/** Predicted service arrival times for one car, from the live ARA combiner. */
+/** Predicted service arrival times for one car, from the live ARA combiner.
+ * Pass `serviceNumber` to restrict to a single upcoming service (used so service
+ * estimates only fire after the final stage before that service). */
 export async function serviceEstimatesForCar(
   eventName: string,
-  carNumber: string
+  carNumber: string,
+  serviceNumber?: number
 ): Promise<ServiceEstimateForCar[] | null> {
   const data = await findCombinerEventByName(eventName);
   if (!data) return null;
   const num = Number(carNumber);
   const durations = await serviceDurations();
   const list = (data.serviceIn ?? [])
-    .filter((s) => s.number === num)
+    .filter((s) => s.number === num && (serviceNumber == null || s.serviceNumber === serviceNumber))
     .sort((a, b) => a.serviceNumber - b.serviceNumber)
     .map((s) => ({
       serviceNumber: s.serviceNumber,

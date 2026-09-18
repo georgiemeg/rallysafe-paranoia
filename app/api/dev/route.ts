@@ -211,9 +211,10 @@ export async function POST(req: NextRequest) {
   if (body.action === "event-config") {
     const name = typeof body.name === "string" ? body.name.trim() : "";
     if (!name) return NextResponse.json({ error: "Name the config (e.g. 'Overmountain 2026')." }, { status: 400 });
-    const patch: { bulletinUrl?: string; serviceDurationsCsv?: string } = {};
+    const patch: { bulletinUrl?: string; serviceDurationsCsv?: string; serviceAfterStagesCsv?: string } = {};
     if (typeof body.bulletinUrl === "string") patch.bulletinUrl = body.bulletinUrl.trim();
     if (typeof body.serviceDurationsCsv === "string") patch.serviceDurationsCsv = body.serviceDurationsCsv.trim();
+    if (typeof body.serviceAfterStagesCsv === "string") patch.serviceAfterStagesCsv = body.serviceAfterStagesCsv.trim();
     const config = await saveEventConfig(name, patch);
     if (body.active !== false) await setActiveEventConfig(name);
     return NextResponse.json({ ok: true, config });

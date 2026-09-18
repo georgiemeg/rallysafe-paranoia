@@ -17,6 +17,7 @@ import { deliverAlert } from "@/lib/deliver";
 import { stageStartMessage, stageFinishMessage, incidentMessage, safetyStatusMessage, serviceEstimatesMessage, batchMessages } from "@/lib/messages";
 import { buildStageTimesMessage, buildOverallTimeMessage } from "@/lib/rally-engine";
 import { serviceEstimatesForCar, eventNameForId } from "@/lib/combiner";
+import { getActiveServiceAfterStages } from "@/lib/sportity";
 
 const STOPPED_THRESHOLD_MS = 60 * 1000;
 const SPEED_STOPPED_MAX = 5;
@@ -100,6 +101,12 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
       console.error(`rc stage-times fallback scan failed for event ${eventId}`, err);
     }
   }
+
+  // Service estimates fire only after the final stage before a service. The active event
+  // config lists those stage numbers ("serviceAfterStagesCsv"), e.g. "2,7,10" = services
+  // follow stages 2, 7 and 10. Unset config keeps the old always-on behavior.
+  const serviceAfterStages =
+    eventId === 20251925 ? null : await getActiveServiceAfterStages().catch(() => null);
 
   for (const entryId of watchedEntryIds) {
     const subscriberIds = await getSubscribersForCar(eventId, entryId);
@@ -366,20 +373,29 @@ export async function processWatchedEvent(eventId: number, onlyEntryId?: number)
           }
         }
         if (sub.alerts.serviceEstimates && !serviceSent.has(n)) {
-          const estimates =
-            eventId === 20251925
-              ? await (async () => {
-                  const { simServiceEstimatesFor } = await import("@/lib/sim/engine");
-                  return simServiceEstimatesFor(sub.carNumber, n);
-                })()
-              : await (async () => {
-                  const name = await eventNameForId(eventId);
-                  if (!name) return null;
-                  return serviceEstimatesForCar(name, sub.carNumber);
-                })();
-          if (estimates && estimates.length) {
-            queue.push({ kind: "serviceEstimates", body: serviceEstimatesMessage(sub, estimates) });
-            serviceSent.add(n);
+          // Only fire on a stage that immediately precedes a service, when the config
+          // lists which stages those are. The reported service is the one following this
+          // stage (its index in the list + 1). Unset config keeps the old always-on
+          // behavior so unconfigured events don't silently stop sending service alerts.
+          const svcIdx = serviceAfterStages ? serviceAfterStages.indexOf(n) : -1;
+          const isServiceStage = !serviceAfterStages || serviceAfterStages.length === 0 || svcIdx >= 0;
+          if (isServiceStage) {
+            const targetService = serviceAfterStages && serviceAfterStages.length ? svcIdx + 1 : undefined;
+            const estimates =
+              eventId === 20251925
+                ? await (async () => {
+                    const { simServiceEstimatesFor } = await import("@/lib/sim/engine");
+                    return simServiceEstimatesFor(sub.carNumber, n);
+                  })()
+                : await (async () => {
+                    const name = await eventNameForId(eventId);
+                    if (!name) return null;
+                    return serviceEstimatesForCar(name, sub.carNumber, targetService);
+                  })();
+            if (estimates && estimates.length) {
+              queue.push({ kind: "serviceEstimates", body: serviceEstimatesMessage(sub, estimates) });
+              serviceSent.add(n);
+            }
           }
         }
       }
