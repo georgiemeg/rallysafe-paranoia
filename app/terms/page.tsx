@@ -13,7 +13,7 @@ export default function TermsPage() {
 
         <h2 className="text-neutral-100 font-semibold text-base pt-2">What this is</h2>
         <p>
-          RallySafe Paranoia is a personal-use rally tracking tool. It lets you choose specific cars/drivers in a
+          RallySafe Paranoia is a personal-use rally tracking tool operated by Megennis Motorsport, LLC. It lets you choose specific cars/drivers in a
           rally event and receive text and/or in-app alerts about their stage times, service estimates, and
           incidents (e.g. a car stopped on course).
         </p>

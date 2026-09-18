@@ -11,6 +11,11 @@ export default function PrivacyPage() {
       <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4 text-sm text-neutral-300 leading-relaxed">
         <p className="text-neutral-500">Last updated: {new Date().toISOString().slice(0, 10)}</p>
 
+        <p>
+          RallySafe Paranoia is operated by Megennis Motorsport, LLC (&ldquo;we&rdquo;, &ldquo;us&rdquo;).
+          This policy explains what we collect and how we use it.
+        </p>
+
         <h2 className="text-neutral-100 font-semibold text-base pt-2">What we collect</h2>
         <p>
           Your mobile phone number (if you opt in to texts), the cars/drivers you choose to track, and which alert

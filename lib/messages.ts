@@ -141,7 +141,7 @@ function titleCase(s: string): string {
 
 export function incidentMessage(sub: CarSubscription, minutesStopped: number, mapsLink: string): string {
   return (
-    `RallySafe Paranoia alert:\n` +
+    `Megennis Motorsport, LLC alert:\n` +
     `Car ${fmtCarLabel(sub)} (${sub.driverName}) has not moved for ${minutesStopped}+ min.\n` +
     `Last known location: ${mapsLink}`
   );
@@ -157,7 +157,7 @@ export function safetyStatusMessage(sub: CarSubscription, safetyStatus: number):
         ? "Hazard — vehicle stopped, may be blocking the road"
         : `Safety system active (status ${safetyStatus})`;
   return (
-    `RallySafe Paranoia alert:\n` +
+    `Megennis Motorsport, LLC alert:\n` +
     `Car ${fmtCarLabel(sub)} (${sub.driverName}/${sub.codriverName}): ${state}.`
   );
 }
@@ -205,7 +205,7 @@ export function batchMessages(messages: string[]): string {
 }
 
 export const HELP_MESSAGE = [
-  "RallySafe Paranoia — text commands:",
+  "Megennis Motorsport, LLC — RallySafe Paranoia text commands:",
   "",
   "HELP — show this message",
   "OVERALL TIME CHECK — get current overall standings for all tracked cars",

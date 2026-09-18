@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     // Opt-out revokes consent for this phone number across all devices.
     await revokePhoneConsent(from);
     return twiml(
-      "You're unsubscribed from RallySafe Paranoia texts and won't receive any more. Reply START to opt back in."
+      "You're unsubscribed from Megennis Motorsport, LLC texts and won't receive any more. Reply START to opt back in."
     );
   }
 
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     const ids = await deviceIdsForPhone(from);
     if (ids.length === 0) {
       return twiml(
-        "This number isn't registered with RallySafe Paranoia yet. Set up tracking and opt in at the web app first."
+        "This number isn't registered with Megennis Motorsport, LLC yet. Set up tracking and opt in at the web app first."
       );
     }
     for (const id of ids) {
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
     // Texting START is a valid opt-in method; record the consent evidence.
     await recordPhoneConsent(from);
-    return twiml("You're re-subscribed to RallySafe Paranoia texts. Reply HELP for commands, STOP to opt out again.");
+    return twiml("You're re-subscribed to Megennis Motorsport, LLC texts. Reply HELP for commands, STOP to opt out again.");
   }
 
   if (HELP_WORDS.has(normalized)) {
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
   const device = await findDeviceByPhone(from);
   if (!device) {
     return twiml(
-      "This number isn't registered with RallySafe Paranoia. Set up tracking at the web app first."
+      "This number isn't registered with Megennis Motorsport, LLC. Set up tracking at the web app first."
     );
   }
   if (device.smsEnabled === false) {

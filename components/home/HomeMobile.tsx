@@ -624,7 +624,7 @@ export function HomeMobile() {
                 />
                 <span className="text-xs text-white/90 leading-snug">
                   By checking this box, I agree to receive recurring automated text messages from{" "}
-                  <span className="font-semibold text-white">RallySafe Paranoia</span> with rally
+                  <span className="font-semibold text-white">Megennis Motorsport, LLC</span> with rally
                   stage-time, service, and incident alerts for the cars I track. Message frequency
                   varies. Message and data rates may apply. Reply HELP for help or STOP to cancel.{" "}
                   <Link href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms</Link>

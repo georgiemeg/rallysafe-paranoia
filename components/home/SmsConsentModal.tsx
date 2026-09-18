@@ -38,7 +38,7 @@ export function SmsConsentModal({
             className="mt-1 w-5 h-5 shrink-0 accent-brand-gold"
           />
           <span className="text-sm text-neutral-200 leading-snug">
-            By checking this box, I agree to receive recurring automated text messages from RallySafe Paranoia with
+            By checking this box, I agree to receive recurring automated text messages from Megennis Motorsport, LLC with
             rally stage-time, service, and incident alerts for the cars I&apos;m tracking above. Message frequency
             varies. Message and data rates may apply. Reply HELP for help or STOP to cancel.
           </span>

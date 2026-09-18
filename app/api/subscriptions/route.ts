@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
       ? carSubs.map((c) => `#${c.carNumber} ${c.driverName}`).join(", ")
       : "no cars yet";
     const savePrompt =
-      `RallySafe Paranoia: You're enrolled! Now tracking: ${carList}.\n\n` +
+      `Megennis Motorsport, LLC (RallySafe Paranoia): You're enrolled! Now tracking: ${carList}.\n\n` +
       `Message frequency varies. Msg & data rates may apply. Reply HELP for help, STOP to cancel. ` +
       `Save this number to your contacts so alerts don't get missed.`;
     const delivered = await deliverAlert({

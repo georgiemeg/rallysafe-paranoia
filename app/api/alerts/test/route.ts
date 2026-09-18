@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
   });
 
   const text =
-    "RallySafe Paranoia test. If you got this, texts are working. Reply STOP to unsubscribe. " +
+    "Megennis Motorsport, LLC (RallySafe Paranoia) test. If you got this, texts are working. Reply STOP to unsubscribe. " +
     "Save this number in your contacts so real alerts don't get filtered.";
 
   const result = await deliverAlert({
